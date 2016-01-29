@@ -11,3 +11,4 @@ F:	configs/am335x_evm_nor_defconfig
 F:	configs/am335x_evm_norboot_defconfig
 F:	configs/am335x_evm_spiboot_defconfig
 F:	configs/am335x_evm_usbspl_defconfig
+F:	configs/am335x_icev2_defconfig
