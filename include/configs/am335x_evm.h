@@ -490,4 +490,9 @@
 #endif
 #endif  /* NOR support */
 
+#ifdef CONFIG_DRIVER_TI_CPSW
+#define CONFIG_CLOCK_SYNTHESIZER
+#define CLK_SYNTHESIZER_I2C_ADDR 0x65
+#endif
+
 #endif	/* ! __CONFIG_AM335X_EVM_H */
