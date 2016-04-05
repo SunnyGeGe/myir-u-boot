@@ -39,6 +39,19 @@ static int spl_register_fat_device(struct blk_desc *block_dev, int partition)
 	return err;
 }
 
+static int h_spl_fit_read(struct spl_load_info *load, const char *filename,
+			  void *buf, ulong file_offset, ulong size)
+{
+	loff_t actread;
+	int ret;
+
+	ret = fat_read_file(filename, buf, file_offset, size, &actread);
+	if (ret)
+		return ret;
+	else
+		return actread;
+}
+
 int spl_load_image_fat(struct blk_desc *block_dev,
 						int partition,
 						const char *filename)
@@ -57,9 +70,19 @@ int spl_load_image_fat(struct blk_desc *block_dev,
 	if (err <= 0)
 		goto end;
 
-	spl_parse_image_header(header);
+	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT)) {
+		struct spl_load_info load;
 
-	err = file_fat_read(filename, (u8 *)spl_image.load_addr, 0);
+		debug("Found FIT\n");
+		load.priv = NULL;
+		load.fs_read = h_spl_fit_read;
+
+		err = spl_fs_load_simple_fit(&load, filename, header);
+	} else {
+		spl_parse_image_header(header);
+
+		err = file_fat_read(filename, (u8 *)spl_image.load_addr, 0);
+	}
 
 end:
 #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
