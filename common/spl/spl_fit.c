@@ -82,12 +82,42 @@ static int spl_fit_select_fdt(const void *fdt, int images, int *fdt_offsetp)
 	return -ENOENT;
 }
 
+#define get_fit_size(fit) ALIGN(fdt_totalsize(fit), 4)
+
+static int spl_parse_fit_header(void *fit)
+{
+	int node;
+
+	spl_image.images = fdt_path_offset(fit, FIT_IMAGES_PATH);
+	if (spl_image.images < 0) {
+		debug("%s: Cannot find /images node: %d\n", __func__,
+		      spl_image.images);
+		return -1;
+	}
+	node = fdt_first_subnode(fit, spl_image.images);
+	if (node < 0) {
+		debug("%s: Cannot find first image node: %d\n", __func__, node);
+		return -1;
+	}
+
+	/* Get its information and set up the spl_image structure */
+	spl_image.data_offset = fdt_getprop_u32(fit, node, "data-offset");
+	spl_image.data_size = fdt_getprop_u32(fit, node, "data-size");
+	spl_image.load_addr = fdt_getprop_u32(fit, node, "load");
+	debug("data_offset=%x, data_size=%x\n", spl_image.data_offset,
+	      spl_image.data_size);
+	spl_image.entry_point = spl_image.load_addr;
+	spl_image.os = IH_OS_U_BOOT;
+
+	return 0;
+}
+
 int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 {
 	int sectors;
 	ulong size, load;
 	unsigned long count;
-	int node, images;
+	int images, ret;
 	void *load_ptr;
 	int fdt_offset, fdt_len;
 	int data_offset, data_size;
@@ -99,9 +129,8 @@ int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 	 * Figure out where the external images start. This is the base for the
 	 * data-offset properties in each image.
 	 */
-	size = fdt_totalsize(fit);
-	size = (size + 3) & ~3;
-	base_offset = (size + 3) & ~3;
+	size = get_fit_size(fit);
+	base_offset = size;
 
 	/*
 	 * So far we only have one block of data from the FIT. Read the entire
@@ -125,26 +154,13 @@ int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 	if (count == 0)
 		return -EIO;
 
-	/* find the firmware image to load */
-	images = fdt_path_offset(fit, FIT_IMAGES_PATH);
-	if (images < 0) {
-		debug("%s: Cannot find /images node: %d\n", __func__, images);
+	ret = spl_parse_fit_header(fit);
+	if (ret < 0)
 		return -1;
-	}
-	node = fdt_first_subnode(fit, images);
-	if (node < 0) {
-		debug("%s: Cannot find first image node: %d\n", __func__, node);
-		return -1;
-	}
-
-	/* Get its information and set up the spl_image structure */
-	data_offset = fdt_getprop_u32(fit, node, "data-offset");
-	data_size = fdt_getprop_u32(fit, node, "data-size");
-	load = fdt_getprop_u32(fit, node, "load");
-	debug("data_offset=%x, data_size=%x\n", data_offset, data_size);
-	spl_image.load_addr = load;
-	spl_image.entry_point = load;
-	spl_image.os = IH_OS_U_BOOT;
+	data_offset = spl_image.data_offset;
+	data_size = spl_image.data_size;
+	load = spl_image.load_addr;
+	images = spl_image.images;
 
 	/*
 	 * Work out where to place the image. We read it so that the first
@@ -191,4 +207,90 @@ int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 	memcpy(dst, dst + fdt_offset % info->bl_len, fdt_len);
 
 	return 0;
+}
+
+int spl_fs_load_simple_fit(struct spl_load_info *info, const char *filename,
+			   void *fit)
+{
+	ulong size, load;
+	unsigned long count;
+	int images, ret;
+	void *load_ptr;
+	int fdt_offset, fdt_len;
+	int data_offset, data_size, file_offset;
+	int base_offset = 0, align_len;
+	void *dst;
+
+	/*
+	 * Figure out where the external images start. This is the base for the
+	 * data-offset properties in each image.
+	 */
+	size = get_fit_size(fit);
+	base_offset = size;
+
+	/*
+	 * Read the entire FIT header, placing it so it finishes before
+	 * where we will load the image. Also the load address is aligned
+	 * ARCH_DMA_MINALIGN.
+	 */
+	align_len = ARCH_DMA_MINALIGN - 1;
+	fit = (void *)((CONFIG_SYS_TEXT_BASE - size - align_len) & ~align_len);
+	debug("FIT header read: destination = 0x%p, size = %lx\n", fit, size);
+	count = info->fs_read(info, filename, fit, 0, size);
+	if (count <= 0)
+		return -EIO;
+
+	ret = spl_parse_fit_header(fit);
+	if (ret < 0)
+		return -1;
+	data_offset = spl_image.data_offset;
+	data_size = spl_image.data_size;
+	load = spl_image.load_addr;
+	images = spl_image.images;
+
+	/*
+	 * Work out where to place the image. Assuming load addr of u-boot.bin
+	 * is always aligned to ARCH_DMA_MINALIGN. It is possible that file
+	 * offset is not aligned. In order to make sure that the file read is
+	 * dma aligned, align the file offset to dma with extra bytes in the
+	 * beginning. Then do a memcpy of image to dst.
+	 */
+	data_offset += base_offset;
+	file_offset = data_offset & ~align_len;
+	load_ptr = (void *)load;
+	dst = load_ptr;
+
+	/* Read the image */
+	debug("Temp u-boot.bin read from fit: dst = 0x%p, file offset = 0x%x, size = 0x%x\n",
+	      dst, file_offset, data_size);
+	count = info->fs_read(info, filename, dst, file_offset,
+			      data_size + (data_offset & align_len));
+	if (count <= 0)
+		return -EIO;
+	debug("u-boot.bin load: dst = 0x%p, size = 0x%x\n", dst, data_size);
+	memcpy(dst, dst + (data_offset & align_len), data_size);
+
+	/* Figure out which device tree the board wants to use */
+	fdt_len = spl_fit_select_fdt(fit, images, &fdt_offset);
+	if (fdt_len < 0)
+		return fdt_len;
+
+	/*
+	 * Read the device tree and place it after the image. Making sure that
+	 * load addr and file offset are aligned to dma.
+	 */
+	dst = (void *)((load + data_size + align_len) & ~align_len);
+	fdt_offset += base_offset;
+	file_offset = fdt_offset & ~align_len;
+	debug("Temp fdt read from fit: dst = 0x%p, file offset = 0x%x, size = %d\n",
+	      dst, file_offset, data_size);
+	count = info->fs_read(info, filename, dst, file_offset,
+			      fdt_len + (fdt_offset & align_len));
+	if (count <= 0)
+		return -EIO;
+	debug("fdt load: dst = 0x%p, size = 0x%x\n", load_ptr + data_size,
+	      data_size);
+	memcpy(load_ptr + data_size, dst + (fdt_offset & align_len), fdt_len);
+
+	return 1;
 }

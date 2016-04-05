@@ -27,6 +27,11 @@ struct spl_image_info {
 	u32 entry_point;
 	u32 size;
 	u32 flags;
+#ifdef CONFIG_SPL_LOAD_FIT
+	int data_offset;
+	int data_size;
+	int images;
+#endif
 };
 
 /*
@@ -36,6 +41,7 @@ struct spl_image_info {
  * @priv: Private data for the device
  * @bl_len: Block length for reading in bytes
  * @read: Function to call to read from the device
+ * @fs_read: Function to call to read from a fs
  */
 struct spl_load_info {
 	void *dev;
@@ -43,9 +49,34 @@ struct spl_load_info {
 	int bl_len;
 	ulong (*read)(struct spl_load_info *load, ulong sector, ulong count,
 		      void *buf);
+	int (*fs_read)(struct spl_load_info *load, const char *filename,
+		      void *buf, ulong file_offset, ulong size);
 };
 
+/**
+ * spl_load_simple_fit() - Loads a fit image from a device.
+ * @info:	Structure containing the information required to load data.
+ * @sector:	Sector number where FIT image is located in the device
+ * @fdt:	Pointer to the copied FIT header.
+ *
+ * Reads the FIT image @sector in the device. Loads u-boot image to
+ * specified load address and copies the dtb to end of u-boot image.
+ * Returns 0 on success.
+ */
 int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fdt);
+
+/**
+ * spl_fs_load_simple_fit() - Loads a fit image from a file system.
+ * @info:	Structure containing the information required to load data.
+ * @filename:	Name of the FIT image in the file system.
+ * @fit:	Pointer to the copied FIT header.
+ *
+ * Reads the FIT image in the filesystem. Loads u-boot image to
+ * specified load address and copies the dtb to end of u-boot image.
+ * Returns 1 on success.
+ */
+int spl_fs_load_simple_fit(struct spl_load_info *info, const char *filename,
+			   void *fit);
 
 #define SPL_COPY_PAYLOAD_ONLY	1
 
