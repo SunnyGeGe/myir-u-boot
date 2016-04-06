@@ -121,7 +121,7 @@ int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 	void *load_ptr;
 	int fdt_offset, fdt_len;
 	int data_offset, data_size;
-	int base_offset;
+	int base_offset, align_len;
 	int src_sector;
 	void *dst;
 
@@ -146,7 +146,9 @@ int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 	 * In fact the FIT has its own load address, but we assume it cannot
 	 * be before CONFIG_SYS_TEXT_BASE.
 	 */
-	fit = (void *)(CONFIG_SYS_TEXT_BASE - size - info->bl_len);
+	align_len = ARCH_DMA_MINALIGN - 1;
+	fit = (void *)((CONFIG_SYS_TEXT_BASE - size - info->bl_len -
+			align_len) & ~align_len);
 	sectors = (size + info->bl_len - 1) / info->bl_len;
 	count = info->read(info, sector, sectors, fit);
 	debug("fit read sector %lx, sectors=%d, dst=%p, count=%lu\n",
@@ -189,8 +191,9 @@ int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 	/*
 	 * Read the device tree and place it after the image. There may be
 	 * some extra data before it since we can only read entire blocks.
+	 * And also align the destination address to ARCH_DMA_MINALIGN.
 	 */
-	dst = load_ptr + data_size;
+	dst = (void *)((load + data_size + align_len) & ~align_len);
 	fdt_offset += base_offset;
 	count = info->read(info, sector + fdt_offset / info->bl_len, sectors,
 			   dst);
@@ -204,7 +207,7 @@ int spl_load_simple_fit(struct spl_load_info *info, ulong sector, void *fit)
 	 * After this we will have the U-Boot image and its device tree ready
 	 * for us to start.
 	 */
-	memcpy(dst, dst + fdt_offset % info->bl_len, fdt_len);
+	memcpy(load_ptr + data_size, dst + fdt_offset % info->bl_len, fdt_len);
 
 	return 0;
 }
