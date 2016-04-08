@@ -656,3 +656,15 @@ int board_early_init_f(void)
 	return 0;
 }
 #endif
+
+#ifdef CONFIG_SPL_LOAD_FIT
+int board_fit_config_name_match(const char *name)
+{
+	if (board_is_x15() && !strcmp(name, "am57xx-beagle-x15"))
+		return 0;
+	else if (board_is_am572x_evm() && !strcmp(name, "am57xx-beagle-x15"))
+		return 0;
+	else
+		return -1;
+}
+#endif
