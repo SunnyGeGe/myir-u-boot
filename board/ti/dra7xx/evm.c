@@ -734,3 +734,12 @@ int board_fit_config_name_match(const char *name)
 		return -1;
 }
 #endif
+
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+int ft_board_setup(void *blob, bd_t *bd)
+{
+	ft_cpu_setup(blob, bd);
+
+	return 0;
+}
+#endif
