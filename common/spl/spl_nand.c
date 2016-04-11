@@ -9,6 +9,8 @@
 #include <spl.h>
 #include <asm/io.h>
 #include <nand.h>
+#include <libfdt_env.h>
+#include <fdt.h>
 
 #if defined(CONFIG_SPL_NAND_RAW_ONLY)
 int spl_nand_load_image(void)
@@ -24,6 +26,19 @@ int spl_nand_load_image(void)
 	return 0;
 }
 #else
+
+static ulong spl_nand_fit_read(struct spl_load_info *load, ulong offs,
+			       ulong size, void *dst)
+{
+	int ret;
+
+	ret = nand_spl_load_image(offs, size, dst);
+	if (!ret)
+		return size;
+	else
+		return 0;
+}
+
 static int spl_nand_load_element(int offset, struct image_header *header)
 {
 	int err;
@@ -32,9 +47,21 @@ static int spl_nand_load_element(int offset, struct image_header *header)
 	if (err)
 		return err;
 
-	spl_parse_image_header(header);
-	return nand_spl_load_image(offset, spl_image.size,
-				   (void *)(unsigned long)spl_image.load_addr);
+	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
+	    image_get_magic(header) == FDT_MAGIC) {
+		struct spl_load_info load;
+
+		debug("Found FIT\n");
+		load.dev = NULL;
+		load.priv = NULL;
+		load.bl_len = 1;
+		load.read = spl_nand_fit_read;
+		return spl_load_simple_fit(&load, offset, header);
+	} else {
+		spl_parse_image_header(header);
+		return nand_spl_load_image(offset, spl_image.size,
+					   (void *)spl_image.load_addr);
+	}
 }
 
 int spl_nand_load_image(void)
