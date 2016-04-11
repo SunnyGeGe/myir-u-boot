@@ -8,3 +8,8 @@ F:	configs/am43xx_evm_nodt_defconfig
 F:	configs/am43xx_evm_qspiboot_defconfig
 F:	configs/am43xx_evm_ethboot_defconfig
 F:	configs/am43xx_evm_usbhost_boot_defconfig
+F:	configs/am43xx_hs_evm_defconfig
+F:	configs/am43xx_hs_evm_qspiboot_defconfig
+F:	configs/am43xx_hs_evm_ethboot_defconfig
+F:	configs/am43xx_hs_evm_usbhost_boot_defconfig
+F:	configs/am43xx_hs_evm_usbspl_defconfig
