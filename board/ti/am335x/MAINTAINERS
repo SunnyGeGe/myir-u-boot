@@ -5,7 +5,7 @@ F:	board/ti/am335x/
 F:	include/configs/am335x_evm.h
 F:	configs/am335x_boneblack_defconfig
 F:	configs/am335x_boneblack_vboot_defconfig
-F:	configs/am335x_evm_defconfig
+F:	configs/am335x_evm_nodt_defconfig
 F:	configs/am335x_gp_evm_defconfig
 F:	configs/am335x_evm_nor_defconfig
 F:	configs/am335x_evm_norboot_defconfig
