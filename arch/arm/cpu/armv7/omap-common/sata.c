@@ -32,6 +32,7 @@ struct omap_pipe3 sata_phy = {
 	.dpll_map = dpll_map_sata,
 };
 
+#ifndef CONFIG_DISK
 int init_sata(int dev)
 {
 	int ret;
@@ -68,3 +69,4 @@ void scsi_bus_reset(void)
 	ahci_reset((void __iomem *)DWC_AHSATA_BASE);
 	ahci_init((void __iomem *)DWC_AHSATA_BASE);
 }
+#endif
