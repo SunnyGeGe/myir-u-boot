@@ -16,4 +16,6 @@ int sata_port_status(int dev, int port);
 
 extern struct blk_desc sata_dev_desc[];
 
+int enable_sata_phy(void);
+
 #endif

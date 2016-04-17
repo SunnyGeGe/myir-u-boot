@@ -32,16 +32,21 @@ struct omap_pipe3 sata_phy = {
 	.dpll_map = dpll_map_sata,
 };
 
+int enable_sata_phy(void)
+{
+	sata_phy.power_reg = (void __iomem *)(*ctrl)->control_phy_power_sata;
+
+	/* Power up the PHY */
+	return phy_pipe3_power_on(&sata_phy);
+}
+
 #ifndef CONFIG_DISK
 int init_sata(int dev)
 {
 	int ret;
 	u32 val;
 
-	sata_phy.power_reg = (void __iomem *)(*ctrl)->control_phy_power_sata;
-
-	/* Power up the PHY */
-	phy_pipe3_power_on(&sata_phy);
+	enable_sata_phy();
 
 	/* Enable SATA module, No Idle, No Standby */
 	val = TI_SATA_IDLE_NO | TI_SATA_STANDBY_NO;
