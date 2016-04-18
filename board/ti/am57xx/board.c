@@ -314,7 +314,10 @@ static void setup_board_eeprom_env(void)
 		goto invalid_eeprom;
 
 	if (board_is_x15()) {
-		name = "beagle_x15";
+		if (board_is_x15_revb1())
+			name = "beagle_x15_revb1";
+		else
+			name = "beagle_x15";
 	} else if (board_is_am572x_evm()) {
 		if (board_is_am572x_evm_reva3())
 			name = "am57xx_evm_reva3";
