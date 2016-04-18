@@ -1282,7 +1282,8 @@ static int cpsw_eth_ofdata_to_platdata(struct udevice *dev)
 		writel(MII_MODE_ENABLE, priv->data.gmii_sel);
 		break;
 	case PHY_INTERFACE_MODE_RMII:
-		writel(RMII_MODE_ENABLE, priv->data.gmii_sel);
+		writel(RMII_MODE_ENABLE | RMII_CHIPCKL_ENABLE,
+		       priv->data.gmii_sel);
 		break;
 	case PHY_INTERFACE_MODE_RGMII:
 	case PHY_INTERFACE_MODE_RGMII_ID:
