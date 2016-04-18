@@ -313,17 +313,21 @@ static void setup_board_eeprom_env(void)
 	if (rc)
 		goto invalid_eeprom;
 
-	if (board_is_x15())
+	if (board_is_x15()) {
 		name = "beagle_x15";
-	else if (board_is_am572x_evm())
-		name = "am57xx_evm";
-	else if (board_is_am572x_idk())
+	} else if (board_is_am572x_evm()) {
+		if (board_is_am572x_evm_reva3())
+			name = "am57xx_evm_reva3";
+		else
+			name = "am57xx_evm";
+	} else if (board_is_am572x_idk()) {
 		name = "am572x_idk";
-	else if (board_is_am571x_idk())
+	} else if (board_is_am571x_idk()) {
 		name = "am571x_idk";
-	else
+	} else {
 		printf("Unidentified board claims %s in eeprom header\n",
 		       board_ti_get_name());
+	}
 
 invalid_eeprom:
 	set_board_info_env(name);
