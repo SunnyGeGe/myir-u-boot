@@ -34,7 +34,12 @@
 #include "mux_data.h"
 
 #define board_is_x15()		board_ti_is("BBRDX15_")
+#define board_is_x15_revb1()	(board_ti_is("BBRDX15_") && \
+				 (strncmp("B.10", board_ti_get_rev(), 3) <= 0))
 #define board_is_am572x_evm()	board_ti_is("AM572PM_")
+#define board_is_am572x_evm_reva3()	\
+				(board_ti_is("AM572PM_") && \
+				 (strncmp("A.30", board_ti_get_rev(), 3) <= 0))
 #define board_is_am572x_idk()	board_ti_is("AM572IDK")
 #define board_is_am571x_idk()	board_ti_is("AM571IDK")
 
@@ -366,6 +371,7 @@ void recalibrate_iodelay(void)
 	const struct pad_conf_entry *pconf;
 	const struct iodelay_cfg_entry *iod;
 	int pconf_sz, iod_sz;
+	int ret;
 
 	if (board_is_am572x_idk()) {
 		pconf = core_padconf_array_essential_am572x_idk;
@@ -392,7 +398,31 @@ void recalibrate_iodelay(void)
 		}
 	}
 
-	__recalibrate_iodelay(pconf, pconf_sz, iod, iod_sz);
+	/* Setup I/O isolation */
+	ret = __recalibrate_iodelay_start();
+	if (ret)
+		goto err;
+
+	/* Do the muxing here */
+	do_set_mux32((*ctrl)->control_padconf_core_base, pconf, pconf_sz);
+
+	/* Now do the weird minor deltas that should be safe */
+	if (board_is_x15() || board_is_am572x_evm()) {
+		if (board_is_x15_revb1() || board_is_am572x_evm_reva3()) {
+			pconf = core_padconf_array_delta_x15_sr2_0;
+			pconf_sz = ARRAY_SIZE(core_padconf_array_delta_x15_sr2_0);
+		} else {
+			pconf = core_padconf_array_delta_x15_sr1_1;
+			pconf_sz = ARRAY_SIZE(core_padconf_array_delta_x15_sr1_1);
+		}
+		do_set_mux32((*ctrl)->control_padconf_core_base, pconf, pconf_sz);
+	}
+
+	/* Setup IOdelay configuration */
+	ret = do_set_iodelay((*ctrl)->iodelay_config_base, iod, iod_sz);
+err:
+	/* Closeup.. remove isolation */
+	__recalibrate_iodelay_end(ret);
 }
 #endif
 
