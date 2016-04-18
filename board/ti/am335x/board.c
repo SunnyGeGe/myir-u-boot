@@ -480,6 +480,49 @@ void sdram_init(void)
 }
 #endif
 
+#if (defined(CONFIG_DRIVER_TI_CPSW) && !defined(CONFIG_SPL_BUILD)) || \
+	(defined(CONFIG_SPL_ETH_SUPPORT) && defined(CONFIG_SPL_BUILD))
+static void request_and_set_gpio(int gpio, char *name)
+{
+	int ret;
+
+	ret = gpio_request(gpio, name);
+	if (ret < 0) {
+		printf("%s: Unable to request %s\n", __func__, name);
+		return;
+	}
+
+	ret = gpio_direction_output(gpio, 0);
+	if (ret < 0) {
+		printf("%s: Unable to set %s  as output\n", __func__, name);
+		goto err_free_gpio;
+	}
+
+	gpio_set_value(gpio, 1);
+
+	return;
+
+err_free_gpio:
+	gpio_free(gpio);
+}
+
+#define REQUEST_AND_SET_GPIO(N)	request_and_set_gpio(N, #N);
+
+/**
+ * RMII mode on ICEv2 board needs 50MHz clock. Given the clock
+ * synthesizer With a capacitor of 18pF, and 25MHz input clock cycle
+ * PLL1 gives an output of 100MHz. So, configuring the div2/3 as 2 to
+ * give 50MHz output for Eth0 and 1.
+ */
+static struct clk_synth cdce913_data = {
+	.id = 0x81,
+	.capacitor = 0x90,
+	.mux = 0x6d,
+	.pdiv2 = 0x2,
+	.pdiv3 = 0x2,
+};
+#endif
+
 /*
  * Basic board specific setup.  Pinmux has been handled already.
  */
@@ -493,6 +536,23 @@ int board_init(void)
 #if defined(CONFIG_NOR) || defined(CONFIG_NAND)
 	gpmc_init();
 #endif
+#if (defined(CONFIG_DRIVER_TI_CPSW) && !defined(CONFIG_SPL_BUILD))
+	int rv;
+
+	if (board_is_icev2()) {
+		REQUEST_AND_SET_GPIO(GPIO_PR1_MII_CTRL);
+		REQUEST_AND_SET_GPIO(GPIO_MUX_MII_CTRL);
+		REQUEST_AND_SET_GPIO(GPIO_FET_SWITCH_CTRL);
+		REQUEST_AND_SET_GPIO(GPIO_PHY_RESET);
+
+		rv = setup_clock_synthesizer(&cdce913_data);
+		if (rv) {
+			printf("Clock synthesizer setup failed %d\n", rv);
+			return rv;
+		}
+	}
+#endif
+
 	return 0;
 }
 
@@ -558,46 +618,6 @@ static struct cpsw_platform_data cpsw_data = {
 	.host_port_num		= 0,
 	.version		= CPSW_CTRL_VERSION_2,
 };
-
-static void request_and_set_gpio(int gpio, char *name)
-{
-	int ret;
-
-	ret = gpio_request(gpio, name);
-	if (ret < 0) {
-		printf("%s: Unable to request %s\n", __func__, name);
-		return;
-	}
-
-	ret = gpio_direction_output(gpio, 0);
-	if (ret < 0) {
-		printf("%s: Unable to set %s  as output\n", __func__, name);
-		goto err_free_gpio;
-	}
-
-	gpio_set_value(gpio, 1);
-
-	return;
-
-err_free_gpio:
-	gpio_free(gpio);
-}
-
-#define REQUEST_AND_SET_GPIO(N)	request_and_set_gpio(N, #N);
-
-/**
- * RMII mode on ICEv2 board needs 50MHz clock. Given the clock
- * synthesizer With a capacitor of 18pF, and 25MHz input clock cycle
- * PLL1 gives an output of 100MHz. So, configuring the div2/3 as 2 to
- * give 50MHz output for Eth0 and 1.
- */
-static struct clk_synth cdce913_data = {
-	.id = 0x81,
-	.capacitor = 0x90,
-	.mux = 0x6d,
-	.pdiv2 = 0x2,
-	.pdiv3 = 0x2,
-};
 #endif
 
 #if ((defined(CONFIG_SPL_ETH_SUPPORT) || defined(CONFIG_SPL_USBETH_SUPPORT)) &&\
@@ -657,19 +677,6 @@ int board_eth_init(bd_t *bis)
 	if (!getenv("eth1addr")) {
 		if (is_valid_ethaddr(mac_addr))
 			eth_setenv_enetaddr("eth1addr", mac_addr);
-	}
-
-	if (board_is_icev2()) {
-		REQUEST_AND_SET_GPIO(GPIO_PR1_MII_CTRL);
-		REQUEST_AND_SET_GPIO(GPIO_MUX_MII_CTRL);
-		REQUEST_AND_SET_GPIO(GPIO_FET_SWITCH_CTRL);
-		REQUEST_AND_SET_GPIO(GPIO_PHY_RESET);
-
-		rv = setup_clock_synthesizer(&cdce913_data);
-		if (rv) {
-			printf("Clock synthesizer setup failed %d\n", rv);
-			return rv;
-		}
 	}
 
 	if (read_eeprom() < 0)
