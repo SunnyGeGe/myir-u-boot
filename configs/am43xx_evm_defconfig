@@ -32,3 +32,4 @@ CONFIG_SPL_OF_LIBFDT=y
 CONFIG_SPL_LOAD_FIT=y
 CONFIG_OF_LIST="am437x-gp-evm am437x-sk-evm am43x-epos-evm am437x-idk-evm"
 CONFIG_DM_ETH=y
+CONFIG_DM_NAND=y
