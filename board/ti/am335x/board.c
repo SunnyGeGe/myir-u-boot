@@ -32,6 +32,9 @@
 #include <environment.h>
 #include <watchdog.h>
 #include <environment.h>
+#include <libfdt.h>
+#include <fdt_support.h>
+
 #include "../common/board_detect.h"
 #include "board.h"
 
@@ -532,6 +535,14 @@ static struct clk_synth cdce913_data = {
 };
 #endif
 
+#if !defined(CONFIG_SPL_BUILD) || \
+	(defined(CONFIG_SPL_ETH_SUPPORT) && defined(CONFIG_SPL_BUILD)) || \
+	(defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP))
+
+static bool eth0_is_mii;
+static bool eth1_is_mii;
+#endif
+
 /*
  * Basic board specific setup.  Pinmux has been handled already.
  */
@@ -551,6 +562,10 @@ int board_init(void)
 	if (board_is_icev2()) {
 		int rv;
 		u32 reg;
+
+		/* factory default configuration */
+		eth0_is_mii = true;
+		eth1_is_mii = true;
 
 		REQUEST_AND_SET_GPIO(GPIO_PR1_MII_CTRL);
 		/* Make J19 status available on GPIO1_26 */
@@ -581,6 +596,7 @@ int board_init(void)
 			writel(reg, GPIO0_IRQSTATUS1); /* clear irq */
 			/* RMII mode */
 			printf("ETH0, CPSW\n");
+			eth0_is_mii = false;
 		} else {
 			/* MII mode */
 			printf("ETH0, PRU\n");
@@ -593,6 +609,7 @@ int board_init(void)
 			/* RMII mode */
 			printf("ETH1, CPSW\n");
 			gpio_set_value(GPIO_MUX_MII_CTRL, 1);
+			eth1_is_mii = false;
 		} else {
 			/* MII mode */
 			printf("ETH1, PRU\n");
@@ -828,5 +845,132 @@ int board_fit_config_name_match(const char *name)
 		return 0;
 	else
 		return -1;
+}
+#endif
+
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+
+static const char cpsw_eth0_alias[] = "/ocp/ethernet@4a100000/slave@4a100200";
+static const char cpsw_eth1_alias[] = "/ocp/ethernet@4a100000/slave@4a100300";
+
+int ft_board_setup(void *fdt, bd_t *bd)
+{
+	const char *path;
+	int offs;
+	int ret;
+
+	if (!board_is_icev2())
+		return 0;
+
+	/* Board DT default is both ports are MII */
+	if (eth0_is_mii && eth1_is_mii)
+		return 0;
+
+	if (eth0_is_mii != eth1_is_mii) {
+		printf("Unsupported Ethernet port configuration\n");
+		printf("Both ports must be set as RMII or MII\n");
+		return 0;
+	}
+
+	printf("Fixing up ETH0 & ETH1 to CPSW Ethernet\n");
+	/* Disable PRUSS-MDIO */
+	path = "/ocp/pruss@4a300000/mdio@4a332400";
+	offs = fdt_path_offset(fdt, path);
+	if (offs < 0)
+		goto no_node;
+
+	ret = fdt_status_disabled(fdt, offs);
+	if (ret < 0)
+		goto disable_failed;
+
+	/* Disable PRU-ICSS Ethernet */
+	path = "/pruss_eth";
+	offs = fdt_path_offset(fdt, path);
+	if (offs < 0)
+		goto no_node;
+
+	ret = fdt_status_disabled(fdt, offs);
+	if (ret < 0)
+		goto disable_failed;
+
+	/* Enable CPSW Ethernet */
+	path = "/ocp/ethernet@4a100000";
+	offs = fdt_path_offset(fdt, path);
+	if (offs < 0)
+		goto no_node;
+
+	ret = fdt_status_okay(fdt, offs);
+	if (ret < 0)
+		goto enable_failed;
+
+	/* Enable CPSW-MDIO */
+	path = "/ocp/ethernet@4a100000/mdio@4a101000";
+	offs = fdt_path_offset(fdt, path);
+	if (offs < 0)
+		goto no_node;
+
+	ret = fdt_status_okay(fdt, offs);
+	if (ret < 0)
+		goto enable_failed;
+
+	/* Set MUX_MII_CTL1 pin high */
+	path = "/ocp/gpio@481ae000/p10";
+	offs = fdt_path_offset(fdt, path);
+	if (offs < 0) {
+		printf("Node %s not found.\n", path);
+		return offs;
+	}
+
+	ret = fdt_delprop(fdt, offs, "output-low");
+	if (ret < 0) {
+		printf("Could not delete output-low property from node %s: %s\n",
+		       path, fdt_strerror(ret));
+		return ret;
+	}
+
+	ret = fdt_setprop(fdt, offs, "output-high", NULL, 0);
+	if (ret < 0) {
+		printf("Could not add output-high property to node %s: %s\n",
+		       path, fdt_strerror(ret));
+		return ret;
+	}
+
+	/* Fixup ethernet aliases */
+	path = "/aliases";
+	offs = fdt_path_offset(fdt, path);
+	if (offs < 0)
+		goto no_node;
+
+	ret = fdt_setprop(fdt, offs, "ethernet0", cpsw_eth0_alias,
+			  strlen(cpsw_eth0_alias) + 1);
+	if (ret < 0) {
+		printf("Could not change ethernet0 alias: %s\n",
+		       fdt_strerror(ret));
+		return ret;
+	}
+
+	ret = fdt_setprop(fdt, offs, "ethernet1", cpsw_eth1_alias,
+			  strlen(cpsw_eth0_alias) + 1);
+	if (ret < 0) {
+		printf("Could not change ethernet0 alias: %s\n",
+		       fdt_strerror(ret));
+		return ret;
+	}
+
+	return 0;
+
+no_node:
+	printf("Node %s not found.\n", path);
+	return offs;
+
+disable_failed:
+	printf("Could not disable node %s: %s\n",
+	       path, fdt_strerror(ret));
+	return ret;
+
+enable_failed:
+	printf("Could not enable node %s: %s\n",
+	       path, fdt_strerror(ret));
+	return ret;
 }
 #endif
