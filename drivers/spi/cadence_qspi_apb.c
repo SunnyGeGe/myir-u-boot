@@ -28,6 +28,7 @@
 #include <common.h>
 #include <asm/io.h>
 #include <asm/errno.h>
+#include <spi.h>
 #include "cadence_qspi.h"
 
 #define CQSPI_REG_POLL_US			(1) /* 1us */
@@ -669,7 +670,7 @@ int cadence_qspi_apb_command_write(void *reg_base, unsigned int cmdlen,
 
 /* Opcode + Address (3/4 bytes) + dummy bytes (0-4 bytes) */
 int cadence_qspi_apb_indirect_read_setup(struct cadence_spi_platdata *plat,
-	unsigned int cmdlen, const u8 *cmdbuf)
+	unsigned int cmdlen, unsigned int rx_width, const u8 *cmdbuf)
 {
 	unsigned int reg;
 	unsigned int rd_reg;
@@ -699,10 +700,9 @@ int cadence_qspi_apb_indirect_read_setup(struct cadence_spi_platdata *plat,
 	/* Configure the opcode */
 	rd_reg = cmdbuf[0] << CQSPI_REG_RD_INSTR_OPCODE_LSB;
 
-#if (CONFIG_SPI_FLASH_QUAD == 1)
-	/* Instruction and address at DQ0, data at DQ0-3. */
-	rd_reg |= CQSPI_INST_TYPE_QUAD << CQSPI_REG_RD_INSTR_TYPE_DATA_LSB;
-#endif
+	if (rx_width & SPI_RX_QUAD)
+		/* Instruction and address at DQ0, data at DQ0-3. */
+		rd_reg |= CQSPI_INST_TYPE_QUAD << CQSPI_REG_RD_INSTR_TYPE_DATA_LSB;
 
 	/* Get address */
 	addr_value = cadence_qspi_apb_cmd2addr(&cmdbuf[1], addr_bytes);
