@@ -10,6 +10,7 @@
  */
 
 #include <common.h>
+#include <asm/io.h>
 #include <fdtdec.h>
 #include <fdt_support.h>
 #include <malloc.h>
@@ -676,6 +677,11 @@ fdt_addr_t dev_get_addr(struct udevice *dev)
 void *dev_get_addr_ptr(struct udevice *dev)
 {
 	return (void *)(uintptr_t)dev_get_addr_index(dev, 0);
+}
+
+void *dev_map_physmem(struct udevice *dev, unsigned long size)
+{
+	return map_physmem(dev_get_addr(dev), size, MAP_NOCACHE);
 }
 
 bool device_has_children(struct udevice *dev)

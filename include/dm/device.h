@@ -463,6 +463,15 @@ fdt_addr_t dev_get_addr(struct udevice *dev);
  */
 void *dev_get_addr_ptr(struct udevice *dev);
 
+/* * dev_map_physmem() - Map bus memory into CPU space
+ *
+ * @dev: Pointer to device
+ * @size: size of the memory to map
+ *
+ * @return addr
+ */
+void *dev_map_physmem(struct udevice *dev, unsigned long size);
+
 /**
  * dev_get_addr_index() - Get the indexed reg property of a device
  *
