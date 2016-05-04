@@ -48,7 +48,11 @@
 /* Memory layout */
 #define CONFIG_NR_DRAM_BANKS		1
 #define CONFIG_SYS_SDRAM_BASE		0x00000000
+#ifdef CONFIG_ARM64
+#define CONFIG_SYS_TEXT_BASE		0x00080000
+#else
 #define CONFIG_SYS_TEXT_BASE		0x00008000
+#endif
 #define CONFIG_SYS_UBOOT_BASE		CONFIG_SYS_TEXT_BASE
 /*
  * The board really has 256M. However, the VC (VideoCore co-processor) shares
@@ -92,7 +96,6 @@
 #define CONFIG_MMC_SDHCI_IO_ACCESSORS
 #define CONFIG_BCM2835_SDHCI
 
-#define CONFIG_CMD_USB
 #ifdef CONFIG_CMD_USB
 #define CONFIG_USB_DWC2
 #ifndef CONFIG_BCM2835
@@ -141,7 +144,6 @@
 #define CONFIG_COMMAND_HISTORY
 
 /* Commands */
-#define CONFIG_CMD_MMC
 #define CONFIG_PARTITION_UUIDS
 #define CONFIG_CMD_PART
 

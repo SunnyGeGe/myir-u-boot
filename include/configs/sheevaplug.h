@@ -10,7 +10,6 @@
 #ifndef _CONFIG_SHEEVAPLUG_H
 #define _CONFIG_SHEEVAPLUG_H
 
-
 /*
  * Version number information
  */
@@ -25,7 +24,6 @@
 /*
  * Commands configuration
  */
-#define CONFIG_CMD_MMC
 
 /*
  * Standard filesystems

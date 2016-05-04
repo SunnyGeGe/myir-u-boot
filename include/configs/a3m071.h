@@ -45,10 +45,7 @@
  * Command line configuration.
  */
 #define CONFIG_CMD_BSP
-#define CONFIG_CMD_CACHE
-#define CONFIG_CMD_MII
 #define CONFIG_CMD_REGINFO
-#define CONFIG_CMD_DHCP
 #define CONFIG_BOOTP_SEND_HOSTNAME
 #define CONFIG_BOOTP_SERVERIP
 #define CONFIG_BOOTP_MAY_FAIL
@@ -56,10 +53,8 @@
 #define CONFIG_BOOTP_GATEWAY
 #define CONFIG_BOOTP_SERVERIP
 #define CONFIG_NET_RETRY_COUNT 3
-#define CONFIG_CMD_LINK_LOCAL
 #define CONFIG_NETCONSOLE
 #define CONFIG_SYS_CONSOLE_IS_IN_ENV
-#define CONFIG_CMD_PING
 #define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
 #define CONFIG_MTD_PARTITIONS	/* needed for UBI */
 #define CONFIG_FLASH_CFI_MTD
@@ -233,15 +228,12 @@
  *                                                        +- 31    0 PSC1
  */
 
-
 /*
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP
 
 #define CONFIG_CMDLINE_EDITING
-#define	CONFIG_SYS_HUSH_PARSER
-#define	CONFIG_SYS_PROMPT_HUSH_PS2	"> "
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE		1024
@@ -257,7 +249,6 @@
 
 #define CONFIG_SYS_LOAD_ADDR		0x00100000
 
-#define CONFIG_LOOPW
 #define CONFIG_SYS_CONSOLE_INFO_QUIET	/* don't print console @ startup*/
 
 /*

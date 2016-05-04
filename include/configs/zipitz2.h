@@ -45,7 +45,6 @@
 #define	CONFIG_SETUP_MEMORY_TAGS
 #define	CONFIG_SYS_TEXT_BASE		0x0
 #define	CONFIG_LZMA			/* LZMA compression support */
-#define	CONFIG_OF_LIBFDT
 
 /*
  * Serial Console Configuration
@@ -60,10 +59,6 @@
  * Bootloader Components Configuration
  */
 #define	CONFIG_CMD_ENV
-#define	CONFIG_CMD_MMC
-#define	CONFIG_CMD_SPI
-#define	CONFIG_CMD_USB
-#define	CONFIG_CMD_CACHE
 
 /*
  * MMC Card Configuration
@@ -73,8 +68,6 @@
 #define	CONFIG_GENERIC_MMC
 #define	CONFIG_PXA_MMC_GENERIC
 #define	CONFIG_SYS_MMC_BASE		0xF0000000
-#define	CONFIG_CMD_FAT
-#define CONFIG_CMD_EXT2
 #define	CONFIG_DOS_PARTITION
 #endif
 
@@ -98,11 +91,6 @@ void zipitz2_spi_scl(int);
 unsigned char zipitz2_spi_read(void);
 #endif
 #endif
-
-/*
- * HUSH Shell Configuration
- */
-#define	CONFIG_SYS_HUSH_PARSER		1
 
 #define	CONFIG_SYS_LONGHELP				/* undef to save memory	*/
 #define	CONFIG_SYS_CBSIZE		256		/* Console I/O Buffer Size */

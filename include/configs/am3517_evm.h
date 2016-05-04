@@ -94,13 +94,11 @@
  * Enable CONFIG_USB_MUSB_GADGET for Device functionalities.
  */
 #define CONFIG_USB_MUSB_AM35X
-#define CONFIG_USB_MUSB_HOST
 #define CONFIG_USB_MUSB_PIO_ONLY
 
 #ifdef CONFIG_USB_MUSB_AM35X
 
 #ifdef CONFIG_USB_MUSB_HOST
-#define CONFIG_CMD_USB
 
 #define CONFIG_USB_STORAGE
 #define CONGIG_CMD_STORAGE
@@ -113,7 +111,6 @@
 #endif /* CONFIG_USB_MUSB_HOST */
 
 #ifdef CONFIG_USB_MUSB_GADGET
-#define CONFIG_USB_GADGET_DUALSPEED
 #define CONFIG_USB_ETHER
 #define CONFIG_USB_ETH_RNDIS
 #endif /* CONFIG_USB_MUSB_GADGET */
@@ -122,19 +119,7 @@
 
 /* commands to include */
 #define CONFIG_CMD_NAND
-#define CONFIG_CMD_CACHE
-#define CONFIG_CMD_FAT
-#define CONFIG_CMD_EXT2
-#define CONFIG_CMD_EXT4
-#define CONFIG_CMD_EXT4_WRITE
-#define CONFIG_CMD_FS_GENERIC
 #define CONFIG_CMD_PART
-#define CONFIG_CMD_ASKENV
-#define CONFIG_CMD_BOOTZ
-#define CONFIG_CMD_I2C
-#define CONFIG_CMD_MMC
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_PING
 #define CONFIG_CMD_MTDPARTS
 
 /* I2C */
@@ -286,7 +271,6 @@
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_VERSION_VARIABLE
 #define CONFIG_SYS_LONGHELP
-#define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_PARTITION_UUIDS
 
 /* We set the max number of command args high to avoid HUSH bugs. */

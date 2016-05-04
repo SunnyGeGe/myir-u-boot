@@ -342,7 +342,6 @@
 			 CLOCK_SCCR2_DIU_EN |		\
 			 CLOCK_SCCR2_I2C_EN)
 
-
 #define CONFIG_CMDLINE_EDITING		1	/* command line history */
 
 /* I2C */
@@ -393,16 +392,10 @@
 #define CONFIG_LOADS_ECHO		1
 #define CONFIG_SYS_LOADS_BAUD_CHANGE	1
 
-#define CONFIG_CMD_ASKENV
-#define CONFIG_CMD_DHCP
 #define CONFIG_CMD_EEPROM
 #undef CONFIG_CMD_FUSE
-#define CONFIG_CMD_I2C
 #undef CONFIG_CMD_IDE
-#undef CONFIG_CMD_EXT2
 #define CONFIG_CMD_JFFS2
-#define CONFIG_CMD_MII
-#define CONFIG_CMD_PING
 #define CONFIG_CMD_REGINFO
 
 #if defined(CONFIG_PCI)

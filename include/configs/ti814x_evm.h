@@ -29,7 +29,6 @@
 #define CONFIG_ENV_SIZE			(128 << 10)	/* 128 KiB */
 #define CONFIG_SYS_MALLOC_LEN		(1024 << 10)
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
-#define CONFIG_SYS_HUSH_PARSER		/* Use HUSH for command parsing */
 #define CONFIG_SYS_NO_FLASH
 #define CONFIG_MACH_TYPE		MACH_TYPE_TI8148EVM
 
@@ -38,7 +37,6 @@
 #define CONFIG_INITRD_TAG		/* for ramdisk support */
 
 /* commands to include */
-#define CONFIG_CMD_ASKENV
 #define CONFIG_VERSION_VARIABLE
 
 #define CONFIG_BOOTDELAY		1	/* negative for no autoboot */
@@ -123,10 +121,7 @@
 #define CONFIG_MMC
 #define CONFIG_GENERIC_MMC
 #define CONFIG_OMAP_HSMMC
-#define CONFIG_CMD_MMC
 #define CONFIG_DOS_PARTITION
-#define CONFIG_CMD_FAT
-#define CONFIG_CMD_EXT2
 
 /**
  * Physical Memory Map
@@ -211,9 +206,6 @@
 #undef CONFIG_USE_IRQ
 
 /* Ethernet */
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_MII
 #define CONFIG_DRIVER_TI_CPSW
 #define CONFIG_MII
 #define CONFIG_BOOTP_DNS

@@ -35,12 +35,9 @@
 #define CONFIG_SYS_FSL_ESDHC_ADDR	CONFIG_SYS_MPC83xx_ESDHC_ADDR
 #define CONFIG_SYS_FSL_ERRATUM_ESDHC111
 
-#define CONFIG_CMD_MMC
 #define CONFIG_GENERIC_MMC
 #define CONFIG_DOS_PARTITION
-#define CONFIG_CMD_EXT2
 
-#define CONFIG_CMD_MEMTEST
 #define CONFIG_SYS_ALT_MEMTEST
 
 #define CONFIG_CMD_FPGAD
@@ -313,9 +310,6 @@
 #define CONFIG_SYS_NS16550_COM1	(CONFIG_SYS_IMMR + 0x4500)
 #define CONFIG_SYS_NS16550_COM2	(CONFIG_SYS_IMMR + 0x4600)
 
-/* Use the HUSH parser */
-#define CONFIG_SYS_HUSH_PARSER
-
 /* Pass open firmware flat tree */
 
 /* I2C */
@@ -510,10 +504,7 @@ int fpga_gpio_get(unsigned int bus, int pin);
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_I2C
-#define CONFIG_CMD_MII
 #define CONFIG_CMD_PCI
-#define CONFIG_CMD_PING
 
 #define CONFIG_CMDLINE_EDITING	1	/* add command line history */
 #define CONFIG_AUTO_COMPLETE		/* add autocompletion support */
@@ -642,6 +633,5 @@ int fpga_gpio_get(unsigned int bus, int pin);
 	"bootm ${kernel_addr} - ${fdt_addr}"
 
 #define CONFIG_BOOTCOMMAND		CONFIG_MMCBOOTCOMMAND
-
 
 #endif	/* __CONFIG_H */

@@ -89,11 +89,9 @@
  * Command line configuration.
  */
 #define CONFIG_SYS_LONGHELP
-#define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_CMDLINE_EDITING
 
 #define CONFIG_CMD_MEM
-#define CONFIG_CMD_TIMER
 
 #endif /* __CONFIG_H */

@@ -163,12 +163,9 @@
 		"if test $board_name = A335BONE; then " \
 			"setenv fdtfile am335x-bone.dtb; fi; " \
 		"if test $board_name = A335BNLT; then " \
-			"if test $board_rev = BBG1; then " \
-				"setenv fdtfile am335x-bonegreen.dtb; " \
-			"else " \
-				"setenv fdtfile am335x-boneblack.dtb; " \
-			"fi; " \
-		"fi; " \
+			"setenv fdtfile am335x-boneblack.dtb; fi; " \
+		"if test $board_name = BBG1; then " \
+			"setenv fdtfile am335x-bonegreen.dtb; fi; " \
 		"if test $board_name = A33515BB; then " \
 			"setenv fdtfile am335x-evm.dtb; fi; " \
 		"if test $board_name = A335X_SK; then " \
@@ -294,13 +291,8 @@
  */
 #define CONFIG_USB_MUSB_DSPS
 #define CONFIG_ARCH_MISC_INIT
-#define CONFIG_USB_MUSB_GADGET
 #define CONFIG_USB_MUSB_PIO_ONLY
 #define CONFIG_USB_MUSB_DISABLE_BULK_COMBINE_SPLIT
-#define CONFIG_USB_GADGET_DOWNLOAD
-#define CONFIG_USB_GADGET_DUALSPEED
-#define CONFIG_USB_GADGET_VBUS_DRAW	2
-#define CONFIG_USB_MUSB_HOST
 #define CONFIG_AM335X_USB0
 #define CONFIG_AM335X_USB0_MODE	MUSB_PERIPHERAL
 #define CONFIG_AM335X_USB1
@@ -320,7 +312,6 @@
 #endif
 
 #ifdef CONFIG_USB_MUSB_HOST
-#define CONFIG_CMD_USB
 #define CONFIG_USB_STORAGE
 #endif
 
@@ -331,11 +322,6 @@
 #define CONFIG_USB_ETH_RNDIS
 #define CONFIG_USBNET_HOST_ADDR	"de:ad:be:af:00:00"
 #endif /* CONFIG_DM_ETH */
-
-/* USB TI's IDs */
-#define CONFIG_G_DNL_VENDOR_NUM 0x0451
-#define CONFIG_G_DNL_PRODUCT_NUM 0xD022
-#define CONFIG_G_DNL_MANUFACTURER "Texas Instruments"
 #endif /* CONFIG_USB_MUSB_GADGET */
 
 /*
@@ -356,7 +342,6 @@
 #define CONFIG_ENV_IS_NOWHERE
 #undef CONFIG_ENV_IS_IN_NAND
 /* disable host part of MUSB in SPL */
-#undef CONFIG_USB_MUSB_HOST
 /* disable EFI partitions and partition UUID support */
 #undef CONFIG_PARTITION_UUIDS
 #undef CONFIG_EFI_PARTITION
@@ -370,7 +355,6 @@
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_USB_FUNCTION_DFU
 #define CONFIG_DFU_MMC
-#define CONFIG_CMD_DFU
 #define DFU_ALT_INFO_MMC \
 	"dfu_alt_info_mmc=" \
 	"boot part 0 1;" \
@@ -452,7 +436,6 @@
 #endif
 
 /* SPI flash. */
-#define CONFIG_CMD_SF
 #define CONFIG_SF_DEFAULT_SPEED		24000000
 
 /* Network. */

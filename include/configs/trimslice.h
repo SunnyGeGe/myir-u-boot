@@ -23,18 +23,14 @@
 
 /* SPI */
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
-#define CONFIG_CMD_SPI
-#define CONFIG_CMD_SF
 
 /* I2C */
 #define CONFIG_SYS_I2C_TEGRA
-#define CONFIG_CMD_I2C
 
 /* SD/MMC */
 #define CONFIG_MMC
 #define CONFIG_GENERIC_MMC
 #define CONFIG_TEGRA_MMC
-#define CONFIG_CMD_MMC
 
 /* Environment in SPI */
 #define CONFIG_ENV_IS_IN_SPI_FLASH
@@ -47,7 +43,6 @@
 #define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_TEGRA
 #define CONFIG_USB_STORAGE
-#define CONFIG_CMD_USB
 
 /* USB networking support */
 #define CONFIG_USB_HOST_ETHER
@@ -59,7 +54,6 @@
 #define CONFIG_CMD_PCI
 
 /* General networking support */
-#define CONFIG_CMD_DHCP
 
 #include "tegra-common-post.h"
 

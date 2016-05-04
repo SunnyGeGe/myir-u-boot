@@ -63,8 +63,6 @@ unsigned long get_board_sys_clk(void);
 #define CONFIG_SCSI_AHCI
 #define CONFIG_SCSI_AHCI_PLAT
 #define CONFIG_CMD_SCSI
-#define CONFIG_CMD_FAT
-#define CONFIG_CMD_EXT2
 #define CONFIG_DOS_PARTITION
 #define CONFIG_BOARD_LATE_INIT
 
@@ -126,7 +124,6 @@ unsigned long get_board_sys_clk(void);
 #define CONFIG_NAND_FSL_IFC
 #define CONFIG_SYS_NAND_MAX_ECCPOS	256
 #define CONFIG_SYS_NAND_MAX_OOBFREE	2
-
 
 #define CONFIG_SYS_NAND_CSPR_EXT	(0x0)
 #define CONFIG_SYS_NAND_CSPR	(CSPR_PHYS_ADDR(CONFIG_SYS_NAND_BASE_PHYS) \
@@ -272,7 +269,6 @@ unsigned long get_board_sys_clk(void);
 
 /* SPI */
 #ifdef CONFIG_FSL_DSPI
-#define CONFIG_CMD_SF
 #define CONFIG_SPI_FLASH
 #define CONFIG_SPI_FLASH_BAR
 #endif
@@ -308,11 +304,9 @@ unsigned long get_board_sys_clk(void);
 /*  MMC  */
 #define CONFIG_MMC
 #ifdef CONFIG_MMC
-#define CONFIG_CMD_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_MMC_HAS_CAPBLT_VS33
 #define CONFIG_GENERIC_MMC
-#define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
 #endif
 
@@ -327,9 +321,7 @@ unsigned long get_board_sys_clk(void);
 #define CONFIG_USB_XHCI_DWC3
 #define CONFIG_USB_MAX_CONTROLLER_COUNT         2
 #define CONFIG_SYS_USB_XHCI_MAX_ROOT_PORTS      2
-#define CONFIG_CMD_USB
 #define CONFIG_USB_STORAGE
-#define CONFIG_CMD_EXT2
 
 /* Initial environment variables */
 #undef CONFIG_EXTRA_ENV_SETTINGS

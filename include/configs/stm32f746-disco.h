@@ -11,7 +11,6 @@
 #define CONFIG_SYS_THUMB_BUILD
 /*#define CONFIG_SYS_NO_FLASH*/
 
-#define CONFIG_OF_LIBFDT
 #define CONFIG_BOARD_EARLY_INIT_F
 
 #define CONFIG_SYS_FLASH_BASE		0x08000000
@@ -76,11 +75,8 @@
  * Command line configuration.
  */
 #define CONFIG_SYS_LONGHELP
-#define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_CMDLINE_EDITING
 
 #define CONFIG_CMD_MEM
-#define CONFIG_CMD_TIMER
-#undef CONFIG_CMD_IMLS
 #endif /* __CONFIG_H */

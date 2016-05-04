@@ -113,10 +113,6 @@ extern unsigned long long get_phys_ccsrbar_addr_early(void);
 #define CONFIG_SYS_NS16550_COM1	(CONFIG_SYS_CCSRBAR+0x4500)
 #define CONFIG_SYS_NS16550_COM2	(CONFIG_SYS_CCSRBAR+0x4600)
 
-/* Use the HUSH parser */
-#define CONFIG_SYS_HUSH_PARSER
-#define CONFIG_SYS_PROMPT_HUSH_PS2 "> "
-
 /*
  * General PCI
  * Memory space is mapped 1-1, but I/O space must start from 0.
@@ -132,7 +128,6 @@ extern unsigned long long get_phys_ccsrbar_addr_early(void);
 
 #define CONFIG_LBA48
 #define CONFIG_DOS_PARTITION
-#define CONFIG_CMD_EXT2
 
 /*
  * Environment
@@ -146,11 +141,7 @@ extern unsigned long long get_phys_ccsrbar_addr_early(void);
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_BOOTZ
-#define CONFIG_CMD_GREPENV
 #define CONFIG_CMD_IRQ
-#define CONFIG_CMD_PING
 
 #ifdef CONFIG_PCI
 #define CONFIG_CMD_PCI

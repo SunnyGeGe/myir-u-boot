@@ -23,7 +23,6 @@
 #include <config_distro_defaults.h>
 
 /* U-Boot commands */
-#define CONFIG_CMD_MEMTEST
 
 /* U-Boot environment */
 #define CONFIG_ENV_OVERWRITE
@@ -46,7 +45,6 @@
 #define CONFIG_BAUDRATE		115200
 
 /* SD/MMC */
-#define CONFIG_CMD_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	0
 #define CONFIG_SYS_FSL_ESDHC_NUM	1
@@ -54,7 +52,6 @@
 #define CONFIG_GENERIC_MMC
 
 /* USB */
-#define CONFIG_CMD_USB
 #define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_MX5
 #define CONFIG_USB_STORAGE
@@ -63,7 +60,6 @@
 #define CONFIG_MXC_USB_FLAGS	0
 
 /* I2C */
-#define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */

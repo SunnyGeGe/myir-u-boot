@@ -51,11 +51,8 @@ Serial console configuration
  * Command line configuration.
  */
 #define CONFIG_CMD_DATE
-#define CONFIG_CMD_DHCP
 #define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_I2C
 #define CONFIG_CMD_JFFS2
-#define CONFIG_CMD_MII
 #define CONFIG_CMD_PCI
 
 #define	CONFIG_TIMESTAMP	1	/* Print image info with timestamp */
@@ -77,7 +74,6 @@ Autobooting
 #define CONFIG_ZERO_BOOTDELAY_CHECK	/* allow stopping of boot process */
 					/* even with bootdelay=0 */
 #undef	CONFIG_BOOTARGS
-
 
 #define CONFIG_PREBOOT	"echo;"	\
 	"echo Type \"run bootcmd_net\" to load Kernel over TFTP and to "\

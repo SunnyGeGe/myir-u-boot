@@ -27,6 +27,8 @@
 #define CONFIG_SYS_LOAD_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x80000)
 #define CONFIG_SYS_BOOTM_LEN		0x1000000 /* 16MB max kernel size */
 
+#define CONFIG_SYS_CACHELINE_SIZE	64
+
 /* UART */
 #define CONFIG_BAUDRATE			115200
 
@@ -57,20 +59,15 @@
 #define CONFIG_MD5
 
 /* Extra Commands */
-#define CONFIG_CMD_CACHE
 #define CONFIG_CMD_ENV
-#define CONFIG_CMD_GPIO
 #define CONFIG_CMD_GPT
 #define CONFIG_CMD_MD5SUM
-#define CONFIG_CMD_MEMINFO
-#define CONFIG_CMD_MMC
 /* Enable that for switching of boot partitions */
 /* Disabled by default as some sub-commands can brick eMMC */
 /*#define CONFIG_SUPPORT_EMMC_BOOT */
 #define CONFIG_CMD_PART
 #define CONFIG_CMD_REGINFO	/* Register dump		*/
 #define CONFIG_CMD_TFTP
-#define CONFIG_CMD_TIMER
 #define CONFIG_CMD_UNZIP
 
 /* Partition table support */
@@ -100,7 +97,6 @@
 "tftp $loadaddr "#file" && " \
 "mmc write $loadaddr $start $size && "
 
-
 #define CONFIG_ENV_REFLASH \
 "mmc dev 0 && "\
 "usb start && "\
@@ -126,10 +122,10 @@ REFLASH(dragonboard/u-boot.img, 8)\
 	"fdt_high=0xffffffffffffffff\0" \
 	"initrd_high=0xffffffffffffffff\0" \
 	"linux_image=Image\0" \
-	"linux_addr=0x81000000\0"\
-	"fdt_image=apq8016-sbc.dtb\0" \
-	"fdt_addr=0x83000000\0"\
-	"ramdisk_addr=0x84000000\0"\
+	"kernel_addr_r=0x81000000\0"\
+	"fdtfile=apq8016-sbc.dtb\0" \
+	"fdt_addr_r=0x83000000\0"\
+	"ramdisk_addr_r=0x84000000\0"\
 	BOOTENV
 
 #define CONFIG_ENV_IS_NOWHERE

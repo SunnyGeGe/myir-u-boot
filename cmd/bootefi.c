@@ -12,6 +12,10 @@
 #include <errno.h>
 #include <libfdt.h>
 #include <libfdt_env.h>
+#include <memalign.h>
+#include <asm/global_data.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 /*
  * When booting using the "bootefi" command, we don't know which
@@ -34,17 +38,30 @@ static struct efi_device_path_file_path bootefi_image_path[] = {
 	}
 };
 
+static struct efi_device_path_file_path bootefi_device_path[] = {
+	{
+		.dp.type = DEVICE_PATH_TYPE_MEDIA_DEVICE,
+		.dp.sub_type = DEVICE_PATH_SUB_TYPE_FILE_PATH,
+		.dp.length = sizeof(bootefi_image_path[0]),
+		.str = { 'b','o','o','t','e','f','i' },
+	}, {
+		.dp.type = DEVICE_PATH_TYPE_END,
+		.dp.sub_type = DEVICE_PATH_SUB_TYPE_END,
+		.dp.length = sizeof(bootefi_image_path[0]),
+	}
+};
+
 static efi_status_t bootefi_open_dp(void *handle, efi_guid_t *protocol,
 			void **protocol_interface, void *agent_handle,
 			void *controller_handle, uint32_t attributes)
 {
-	*protocol_interface = bootefi_image_path;
+	*protocol_interface = bootefi_device_path;
 	return EFI_SUCCESS;
 }
 
 /* The EFI loaded_image interface for the image executed via "bootefi" */
 static struct efi_loaded_image loaded_image_info = {
-	.device_handle = bootefi_image_path,
+	.device_handle = bootefi_device_path,
 	.file_path = bootefi_image_path,
 };
 
@@ -63,7 +80,7 @@ static struct efi_object loaded_image_info_obj = {
 		{
 			/*
 			 * When asking for the device path interface, return
-			 * bootefi_image_path
+			 * bootefi_device_path
 			 */
 			.guid = &efi_guid_device_path,
 			.open = &bootefi_open_dp,
@@ -73,22 +90,59 @@ static struct efi_object loaded_image_info_obj = {
 
 /* The EFI object struct for the device the "bootefi" image was loaded from */
 static struct efi_object bootefi_device_obj = {
-	.handle = bootefi_image_path,
+	.handle = bootefi_device_path,
 	.protocols = {
 		{
 			/* When asking for the device path interface, return
-			 * bootefi_image_path */
+			 * bootefi_device_path */
 			.guid = &efi_guid_device_path,
 			.open = &bootefi_open_dp,
 		}
 	},
 };
 
+static void *copy_fdt(void *fdt)
+{
+	u64 fdt_size = fdt_totalsize(fdt);
+	unsigned long fdt_ram_start = -1L, fdt_pages;
+	u64 new_fdt_addr;
+	void *new_fdt;
+	int i;
+
+        for (i = 0; i < CONFIG_NR_DRAM_BANKS; i++) {
+                u64 ram_start = gd->bd->bi_dram[i].start;
+                u64 ram_size = gd->bd->bi_dram[i].size;
+
+		if (!ram_size)
+			continue;
+
+		if (ram_start < fdt_ram_start)
+			fdt_ram_start = ram_start;
+	}
+
+	/* Give us at least 4kb breathing room */
+	fdt_size = ALIGN(fdt_size + 4096, 4096);
+	fdt_pages = fdt_size >> EFI_PAGE_SHIFT;
+
+	/* Safe fdt location is at 128MB */
+	new_fdt_addr = fdt_ram_start + (128 * 1024 * 1024) + fdt_size;
+	if (efi_allocate_pages(1, EFI_BOOT_SERVICES_DATA, fdt_pages,
+			       &new_fdt_addr) != EFI_SUCCESS) {
+		/* If we can't put it there, put it somewhere */
+		new_fdt_addr = (ulong)memalign(4096, fdt_size);
+	}
+	new_fdt = (void*)(ulong)new_fdt_addr;
+	memcpy(new_fdt, fdt, fdt_totalsize(fdt));
+	fdt_set_totalsize(new_fdt, fdt_size);
+
+	return new_fdt;
+}
+
 /*
  * Load an EFI payload into a newly allocated piece of memory, register all
  * EFI objects it would want to access and jump to it.
  */
-static unsigned long do_bootefi_exec(void *efi)
+static unsigned long do_bootefi_exec(void *efi, void *fdt)
 {
 	ulong (*entry)(void *image_handle, struct efi_system_table *st);
 	ulong fdt_pages, fdt_size, fdt_start, fdt_end;
@@ -100,32 +154,31 @@ static unsigned long do_bootefi_exec(void *efi)
 	 */
 	efi_save_gd();
 
-	/* Update system table to point to our currently loaded FDT */
-
-	if (working_fdt) {
+	if (fdt && !fdt_check_header(fdt)) {
 		/* Prepare fdt for payload */
-		if (image_setup_libfdt(&img, working_fdt, 0, NULL)) {
+		fdt = copy_fdt(fdt);
+
+		if (image_setup_libfdt(&img, fdt, 0, NULL)) {
 			printf("ERROR: Failed to process device tree\n");
 			return -EINVAL;
 		}
 
 		/* Link to it in the efi tables */
 		systab.tables[0].guid = EFI_FDT_GUID;
-		systab.tables[0].table = working_fdt;
+		systab.tables[0].table = fdt;
 		systab.nr_tables = 1;
 
 		/* And reserve the space in the memory map */
-		fdt_start = ((ulong)working_fdt) & ~EFI_PAGE_MASK;
-		fdt_end = ((ulong)working_fdt) + fdt_totalsize(working_fdt);
+		fdt_start = ((ulong)fdt) & ~EFI_PAGE_MASK;
+		fdt_end = ((ulong)fdt) + fdt_totalsize(fdt);
 		fdt_size = (fdt_end - fdt_start) + EFI_PAGE_MASK;
 		fdt_pages = fdt_size >> EFI_PAGE_SHIFT;
 		/* Give a bootloader the chance to modify the device tree */
 		fdt_pages += 2;
 		efi_add_memory_map(fdt_start, fdt_pages,
 				   EFI_BOOT_SERVICES_DATA, true);
-
 	} else {
-		printf("WARNING: No device tree loaded, expect boot to fail\n");
+		printf("WARNING: Invalid device tree, expect boot to fail\n");
 		systab.nr_tables = 0;
 	}
 
@@ -156,8 +209,8 @@ static unsigned long do_bootefi_exec(void *efi)
 /* Interpreter command to boot an arbitrary EFI image from memory */
 static int do_bootefi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-	char *saddr;
-	unsigned long addr;
+	char *saddr, *sfdt;
+	unsigned long addr, fdt_addr = 0;
 	int r = 0;
 
 	if (argc < 2)
@@ -166,8 +219,13 @@ static int do_bootefi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	addr = simple_strtoul(saddr, NULL, 16);
 
+	if (argc > 2) {
+		sfdt = argv[2];
+		fdt_addr = simple_strtoul(sfdt, NULL, 16);
+	}
+
 	printf("## Starting EFI application at 0x%08lx ...\n", addr);
-	r = do_bootefi_exec((void *)addr);
+	r = do_bootefi_exec((void *)addr, (void*)fdt_addr);
 	printf("## Application terminated, r = %d\n", r);
 
 	if (r != 0)
@@ -178,32 +236,49 @@ static int do_bootefi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 #ifdef CONFIG_SYS_LONGHELP
 static char bootefi_help_text[] =
-	"<image address>\n"
-	"  - boot EFI payload stored at address <image address>\n"
-	"\n"
-	"Since most EFI payloads want to have a device tree provided, please\n"
-	"make sure you load a device tree using the fdt addr command before\n"
-	"executing bootefi.\n";
+	"<image address> [fdt address]\n"
+	"  - boot EFI payload stored at address <image address>.\n"
+	"    If specified, the device tree located at <fdt address> gets\n"
+	"    exposed as EFI configuration table.\n";
 #endif
 
 U_BOOT_CMD(
-	bootefi, 2, 0, do_bootefi,
+	bootefi, 3, 0, do_bootefi,
 	"Boots an EFI payload from memory\n",
 	bootefi_help_text
 );
 
-void efi_set_bootdev(const char *dev, const char *devnr)
+void efi_set_bootdev(const char *dev, const char *devnr, const char *path)
 {
-	char devname[16] = { 0 }; /* dp->str is u16[16] long */
+	__maybe_unused struct blk_desc *desc;
+	char devname[32] = { 0 }; /* dp->str is u16[32] long */
 	char *colon;
 
 	/* Assemble the condensed device name we use in efi_disk.c */
 	snprintf(devname, sizeof(devname), "%s%s", dev, devnr);
 	colon = strchr(devname, ':');
+
+#ifdef CONFIG_ISO_PARTITION
+	/* For ISOs we create partition block devices */
+	desc = blk_get_dev(dev, simple_strtol(devnr, NULL, 10));
+	if (desc && (desc->type != DEV_TYPE_UNKNOWN) &&
+	    (desc->part_type == PART_TYPE_ISO)) {
+		if (!colon)
+			snprintf(devname, sizeof(devname), "%s%s:1", dev,
+				 devnr);
+		colon = NULL;
+	}
+#endif
+
 	if (colon)
 		*colon = '\0';
 
-	/* Patch the bootefi_image_path to the target device */
+	/* Patch bootefi_device_path to the target device */
+	memset(bootefi_device_path[0].str, 0, sizeof(bootefi_device_path[0].str));
+	ascii2unicode(bootefi_device_path[0].str, devname);
+
+	/* Patch bootefi_image_path to the target file path */
 	memset(bootefi_image_path[0].str, 0, sizeof(bootefi_image_path[0].str));
+	snprintf(devname, sizeof(devname), "%s", path);
 	ascii2unicode(bootefi_image_path[0].str, devname);
 }

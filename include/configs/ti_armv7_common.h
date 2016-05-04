@@ -110,17 +110,14 @@
 
 /* I2C IP block */
 #define CONFIG_I2C
-#define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 
 /* MMC/SD IP block */
 #define CONFIG_MMC
 #define CONFIG_GENERIC_MMC
-#define CONFIG_CMD_MMC
 
 /* McSPI IP block */
 #define CONFIG_SPI
-#define CONFIG_CMD_SPI
 
 /* GPIO block */
 
@@ -138,7 +135,6 @@
 #else
 #define CONFIG_SYS_MALLOC_LEN	(16 << 20)
 #endif
-#define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_SYS_CONSOLE_INFO_QUIET
 #define CONFIG_BAUDRATE			115200
 #define CONFIG_ENV_VARS_UBOOT_CONFIG	/* Strongly encouraged */
@@ -171,8 +167,6 @@
 #define CONFIG_CMD_MTDPARTS
 #endif
 
-#define CONFIG_CMD_ASKENV
-#define CONFIG_CMD_BOOTZ
 #define CONFIG_SUPPORT_RAW_INITRD
 
 /*
@@ -181,11 +175,7 @@
  */
 #if defined(CONFIG_MMC) || defined(CONFIG_USB_STORAGE)
 #define CONFIG_DOS_PARTITION
-#define CONFIG_CMD_FAT
 #define CONFIG_FAT_WRITE
-#define CONFIG_CMD_EXT2
-#define CONFIG_CMD_EXT4
-#define CONFIG_CMD_FS_GENERIC
 #define CONFIG_PARTITION_UUIDS
 #define CONFIG_CMD_PART
 #endif
@@ -305,6 +295,5 @@
 #endif
 
 #include <config_distro_defaults.h>
-#define CONFIG_CMD_EXT4_WRITE
 
 #endif	/* __CONFIG_TI_ARMV7_COMMON_H__ */

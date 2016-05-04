@@ -176,15 +176,14 @@
 
 #define CONFIG_PCI			/* Enable PCI/PCIE */
 #if defined(CONFIG_PCI)
-#define CONFIG_PCIE1			/* PCIE controler 1 (slot 1) */
-#define CONFIG_PCIE2			/* PCIE controler 2 (slot 2) */
+#define CONFIG_PCIE1			/* PCIE controller 1 (slot 1) */
+#define CONFIG_PCIE2			/* PCIE controller 2 (slot 2) */
 #define CONFIG_FSL_PCI_INIT		/* Use common FSL init code */
 #define CONFIG_PCI_INDIRECT_BRIDGE	/* indirect PCI bridge support */
 #define CONFIG_FSL_PCIE_RESET		/* need PCIe reset errata */
 #define CONFIG_SYS_PCI_64BIT		/* enable 64-bit PCI resources */
 
 #define CONFIG_CMD_PCI
-
 
 /*
  * PCI Windows
@@ -619,9 +618,6 @@ extern unsigned long get_sdram_size(void);
 #define CONFIG_SYS_NS16550_COM1	(CONFIG_SYS_CCSRBAR+0x4500)
 #define CONFIG_SYS_NS16550_COM2	(CONFIG_SYS_CCSRBAR+0x4600)
 
-/* Use the HUSH parser */
-#define CONFIG_SYS_HUSH_PARSER
-
 /* I2C */
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_FSL
@@ -656,15 +652,12 @@ extern unsigned long get_sdram_size(void);
 #define CONFIG_RTC_PT7C4338
 #define CONFIG_SYS_I2C_RTC_ADDR	0x68
 
-#define CONFIG_CMD_I2C
-
 /*
  * SPI interface will not be available in case of NAND boot SPI CS0 will be
  * used for SLIC
  */
 #if !defined(CONFIG_NAND) || !defined(CONFIG_NAND_SECBOOT)
 /* eSPI - Enhanced SPI */
-#define CONFIG_CMD_SF
 #define CONFIG_SF_DEFAULT_SPEED		10000000
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 #endif
@@ -705,7 +698,6 @@ extern unsigned long get_sdram_size(void);
 
 #endif	/* CONFIG_TSEC_ENET */
 
-
 /* SATA */
 #define CONFIG_FSL_SATA
 #define CONFIG_FSL_SATA_V2
@@ -726,7 +718,6 @@ extern unsigned long get_sdram_size(void);
 
 #define CONFIG_MMC
 #ifdef CONFIG_MMC
-#define CONFIG_CMD_MMC
 #define CONFIG_DOS_PARTITION
 #define CONFIG_FSL_ESDHC
 #define CONFIG_GENERIC_MMC
@@ -739,7 +730,6 @@ extern unsigned long get_sdram_size(void);
 #define CONFIG_USB_EHCI
 
 #ifdef CONFIG_USB_EHCI
-#define CONFIG_CMD_USB
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
 #define CONFIG_USB_EHCI_FSL
 #define CONFIG_USB_STORAGE
@@ -798,16 +788,12 @@ extern unsigned long get_sdram_size(void);
 #define CONFIG_CMD_DATE
 #define CONFIG_CMD_ERRATA
 #define CONFIG_CMD_IRQ
-#define CONFIG_CMD_MII
-#define CONFIG_CMD_PING
 #define CONFIG_CMD_REGINFO
 
 #undef CONFIG_WATCHDOG			/* watchdog disabled */
 
 #if defined(CONFIG_MMC) || defined(CONFIG_USB_EHCI) \
 		 || defined(CONFIG_FSL_SATA)
-#define CONFIG_CMD_EXT2
-#define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
 #endif
 

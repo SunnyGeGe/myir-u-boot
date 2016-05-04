@@ -8,7 +8,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-
 #define CONFIG_405EP		1	/* this is a PPC405 CPU */
 #define CONFIG_NEO	        1	/*  on a Neo board */
 
@@ -61,10 +60,8 @@
  * Commands additional to the ones defined in amcc-common.h
  */
 #define CONFIG_CMD_DTT
-#undef CONFIG_CMD_DHCP
 #undef CONFIG_CMD_DIAG
 #undef CONFIG_CMD_EEPROM
-#undef CONFIG_CMD_I2C
 #undef CONFIG_CMD_IRQ
 
 /*

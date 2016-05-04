@@ -34,19 +34,13 @@
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_ASKENV
 #define CONFIG_CMD_BEDBUG
 #define CONFIG_CMD_DATE
-#define CONFIG_CMD_DHCP
 #define CONFIG_CMD_DTT
 #define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_FAT
-#define CONFIG_CMD_I2C
 #define CONFIG_CMD_IDE
 #define CONFIG_CMD_IMMAP
 #define CONFIG_CMD_JFFS2
-#define CONFIG_CMD_MII
-#define CONFIG_CMD_PING
 #define CONFIG_CMD_REGINFO
 
 /*
@@ -73,8 +67,6 @@
 #undef CONFIG_BOOTARGS
 
 #define CONFIG_CMDLINE_EDITING		1	/* add command line history	*/
-#define	CONFIG_SYS_HUSH_PARSER		1	/* use "hush" command parser	*/
-#define	CONFIG_SYS_PROMPT_HUSH_PS2	"> "
 
 #define CONFIG_VERSION_VARIABLE	1	/* include version env variable */
 

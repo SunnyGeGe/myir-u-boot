@@ -76,11 +76,6 @@
  * Supported commands
  */
 #define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_FAT
-#define CONFIG_CMD_I2C
-#define CONFIG_CMD_MII
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
 #ifdef CONFIG_PCI
 #define CONFIG_CMD_PCI
 #endif
@@ -293,7 +288,6 @@
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory	    */
 #define CONFIG_CMDLINE_EDITING
-#define CONFIG_SYS_HUSH_PARSER
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE		1024	/* Console I/O Buffer Size  */

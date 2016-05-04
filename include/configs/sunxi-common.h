@@ -140,7 +140,6 @@
 /* mmc config */
 #ifdef CONFIG_MMC
 #define CONFIG_GENERIC_MMC
-#define CONFIG_CMD_MMC
 #define CONFIG_MMC_SUNXI
 #define CONFIG_MMC_SUNXI_SLOT		0
 #define CONFIG_ENV_IS_IN_MMC
@@ -236,7 +235,6 @@
 #define CONFIG_SYS_I2C_MVTWSI
 #define CONFIG_SYS_I2C_SPEED		400000
 #define CONFIG_SYS_I2C_SLAVE		0x7f
-#define CONFIG_CMD_I2C
 #endif
 
 #if defined CONFIG_VIDEO_LCD_PANEL_I2C && !(defined CONFIG_SPL_BUILD)
@@ -342,23 +340,12 @@ extern int soft_i2c_gpio_scl;
 #endif
 
 #ifdef CONFIG_USB_MUSB_GADGET
-#define CONFIG_USB_GADGET_DUALSPEED
-#define CONFIG_USB_GADGET_VBUS_DRAW	0
-
-#define CONFIG_USB_GADGET_DOWNLOAD
 #define CONFIG_USB_FUNCTION_DFU
 #define CONFIG_USB_FUNCTION_FASTBOOT
 #define CONFIG_USB_FUNCTION_MASS_STORAGE
 #endif
 
-#ifdef CONFIG_USB_GADGET_DOWNLOAD
-#define CONFIG_G_DNL_VENDOR_NUM		0x1f3a
-#define CONFIG_G_DNL_PRODUCT_NUM	0x1010
-#define CONFIG_G_DNL_MANUFACTURER	"Allwinner Technology"
-#endif
-
 #ifdef CONFIG_USB_FUNCTION_DFU
-#define CONFIG_CMD_DFU
 #define CONFIG_DFU_RAM
 #endif
 
@@ -377,7 +364,6 @@ extern int soft_i2c_gpio_scl;
 #endif
 
 #ifdef CONFIG_USB_FUNCTION_MASS_STORAGE
-#define CONFIG_CMD_USB_MASS_STORAGE
 #endif
 
 #ifdef CONFIG_USB_KEYBOARD

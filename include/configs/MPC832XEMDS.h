@@ -304,8 +304,6 @@
 
 #define CONFIG_CMDLINE_EDITING	1	/* add command line history	*/
 #define CONFIG_AUTO_COMPLETE		/* add autocompletion support   */
-/* Use the HUSH parser */
-#define CONFIG_SYS_HUSH_PARSER
 
 /* I2C */
 #define CONFIG_SYS_I2C
@@ -338,7 +336,6 @@
 #define CONFIG_SYS_PCI_SLV_MEM_LOCAL	CONFIG_SYS_SDRAM_BASE
 #define CONFIG_SYS_PCI_SLV_MEM_BUS	0x00000000
 #define CONFIG_SYS_PCI_SLV_MEM_SIZE	0x80000000
-
 
 #ifdef CONFIG_PCI
 #define CONFIG_PCI_INDIRECT_BRIDGE
@@ -409,13 +406,9 @@
 #define CONFIG_BOOTP_GATEWAY
 #define CONFIG_BOOTP_HOSTNAME
 
-
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_I2C
-#define CONFIG_CMD_ASKENV
 
 #if defined(CONFIG_PCI)
     #define CONFIG_CMD_PCI
@@ -605,7 +598,6 @@
 	"tftp $loadaddr $bootfile;"					\
 	"tftp $fdtaddr $fdtfile;"					\
 	"bootm $loadaddr $ramdiskaddr $fdtaddr"
-
 
 #define CONFIG_BOOTCOMMAND CONFIG_NFSBOOTCOMMAND
 

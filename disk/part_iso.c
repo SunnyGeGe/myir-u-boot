@@ -26,6 +26,25 @@
 
 static unsigned char tmpbuf[CD_SECTSIZE];
 
+unsigned long iso_dread(struct blk_desc *block_dev, lbaint_t start,
+                        lbaint_t blkcnt, void *buffer)
+{
+	unsigned long ret;
+
+	if (block_dev->blksz == 512) {
+		/* Convert from 2048 to 512 sector size */
+		start *= 4;
+		blkcnt *= 4;
+	}
+
+	ret = blk_dread(block_dev, start, blkcnt, buffer);
+
+	if (block_dev->blksz == 512)
+		ret /= 4;
+
+	return ret;
+}
+
 /* only boot records will be listed as valid partitions */
 int part_get_info_iso_verb(struct blk_desc *dev_desc, int part_num,
 			   disk_partition_t *info, int verb)
@@ -39,12 +58,12 @@ int part_get_info_iso_verb(struct blk_desc *dev_desc, int part_num,
 	iso_val_entry_t *pve = (iso_val_entry_t *)tmpbuf;
 	iso_init_def_entry_t *pide;
 
-	if (dev_desc->blksz != CD_SECTSIZE)
+	if ((dev_desc->blksz != CD_SECTSIZE) && (dev_desc->blksz != 512))
 		return -1;
 
 	/* the first sector (sector 0x10) must be a primary volume desc */
 	blkaddr=PVD_OFFSET;
-	if (blk_dread(dev_desc, PVD_OFFSET, 1, (ulong *)tmpbuf) != 1)
+	if (iso_dread(dev_desc, PVD_OFFSET, 1, (ulong *)tmpbuf) != 1)
 		return -1;
 	if(ppr->desctype!=0x01) {
 		if(verb)
@@ -58,15 +77,13 @@ int part_get_info_iso_verb(struct blk_desc *dev_desc, int part_num,
 				ppr->stand_ident, dev_desc->devnum, part_num);
 		return (-1);
 	}
-	lastsect= ((ppr->firstsek_LEpathtab1_LE & 0x000000ff)<<24) +
-		  ((ppr->firstsek_LEpathtab1_LE & 0x0000ff00)<< 8) +
-		  ((ppr->firstsek_LEpathtab1_LE & 0x00ff0000)>> 8) +
-		  ((ppr->firstsek_LEpathtab1_LE & 0xff000000)>>24) ;
-	info->blksz=ppr->secsize_BE; /* assuming same block size for all entries */
+	lastsect = le32_to_cpu(ppr->firstsek_LEpathtab1_LE);
+	/* assuming same block size for all entries */
+	info->blksz = be16_to_cpu(ppr->secsize_BE);
 	PRINTF(" Lastsect:%08lx\n",lastsect);
 	for(i=blkaddr;i<lastsect;i++) {
 		PRINTF("Reading block %d\n", i);
-		if (blk_dread(dev_desc, i, 1, (ulong *)tmpbuf) != 1)
+		if (iso_dread(dev_desc, i, 1, (ulong *)tmpbuf) != 1)
 			return -1;
 		if(ppr->desctype==0x00)
 			break; /* boot entry found */
@@ -86,7 +103,7 @@ int part_get_info_iso_verb(struct blk_desc *dev_desc, int part_num,
 	}
 	bootaddr = get_unaligned_le32(pbr->pointer);
 	PRINTF(" Boot Entry at: %08lX\n",bootaddr);
-	if (blk_dread(dev_desc, bootaddr, 1, (ulong *)tmpbuf) != 1) {
+	if (iso_dread(dev_desc, bootaddr, 1, (ulong *)tmpbuf) != 1) {
 		if(verb)
 			printf ("** Can't read Boot Entry at %lX on %d:%d **\n",
 				bootaddr, dev_desc->devnum, part_num);
@@ -95,7 +112,7 @@ int part_get_info_iso_verb(struct blk_desc *dev_desc, int part_num,
 	chksum=0;
 	chksumbuf = (unsigned short *)tmpbuf;
 	for(i=0;i<0x10;i++)
-		chksum+=((chksumbuf[i] &0xff)<<8)+((chksumbuf[i] &0xff00)>>8);
+		chksum += le16_to_cpu(chksumbuf[i]);
 	if(chksum!=0) {
 		if(verb)
 			printf("** Checksum Error in booting catalog validation entry on %d:%d **\n",
@@ -117,7 +134,7 @@ int part_get_info_iso_verb(struct blk_desc *dev_desc, int part_num,
 	}
 #endif
 	/* the validation entry seems to be ok, now search the "partition" */
-	entry_num=0;
+	entry_num=1;
 	offset=0x20;
 	strcpy((char *)info->type, "U-Boot");
 	switch(dev_desc->if_type) {
@@ -194,7 +211,14 @@ found:
 	}
 	newblkaddr = get_unaligned_le32(pide->rel_block_addr);
 	info->start=newblkaddr;
-	PRINTF(" part %d found @ %lx size %lx\n",part_num,newblkaddr,info->size);
+
+	if (dev_desc->blksz == 512) {
+		info->size *= 4;
+		info->start *= 4;
+		info->blksz = 512;
+	}
+
+	PRINTF(" part %d found @ %lx size %lx\n",part_num,info->start,info->size);
 	return 0;
 }
 
@@ -227,7 +251,7 @@ static int part_test_iso(struct blk_desc *dev_desc)
 {
 	disk_partition_t info;
 
-	return part_get_info_iso_verb(dev_desc, 0, &info, 0);
+	return part_get_info_iso_verb(dev_desc, 1, &info, 1);
 }
 
 U_BOOT_PART_TYPE(iso) = {
