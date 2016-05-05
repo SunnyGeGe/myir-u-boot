@@ -1559,6 +1559,22 @@ static int omap_hsmmc_ofdata_to_platdata(struct udevice *dev)
 	return 0;
 }
 
+__weak int platform_fixup_disable_uhs_mode(void)
+{
+	return 0;
+}
+
+static int omap_hsmmc_platform_fixup(struct mmc *mmc)
+{
+	struct omap_hsmmc_data *priv = (struct omap_hsmmc_data *)mmc->priv;
+	struct mmc_config *cfg = &priv->cfg;
+
+	if (platform_fixup_disable_uhs_mode())
+		cfg->host_caps = MMC_MODE_HS_52MHz | MMC_MODE_HS;
+
+	return 0;
+}
+
 static int omap_hsmmc_probe(struct udevice *dev)
 {
 	struct mmc_uclass_priv *upriv = dev_get_uclass_priv(dev);
@@ -1577,6 +1593,8 @@ static int omap_hsmmc_probe(struct udevice *dev)
 	mmc = mmc_create(cfg, priv);
 	if (mmc == NULL)
 		return -1;
+
+	omap_hsmmc_platform_fixup(mmc);
 
 #ifdef OMAP_HSMMC_USE_GPIO
 	gpio_request_by_name(dev, "cd-gpios", 0, &priv->cd_gpio, GPIOD_IS_IN);
