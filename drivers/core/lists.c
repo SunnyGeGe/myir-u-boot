@@ -115,24 +115,30 @@ static int driver_check_compatible(const void *blob, int offset,
 				   const struct udevice_id *of_match,
 				   const struct udevice_id **of_idp)
 {
-	int ret;
+	int len;
+	int i;
+	const char *prop;
+	const struct udevice_id *match;
 
 	*of_idp = NULL;
 	if (!of_match)
 		return -ENOENT;
 
-	while (of_match->compatible) {
-		ret = fdt_node_check_compatible(blob, offset,
-						of_match->compatible);
-		if (!ret) {
-			*of_idp = of_match;
-			return 0;
-		} else if (ret == -FDT_ERR_NOTFOUND) {
-			return -ENODEV;
-		} else if (ret < 0) {
-			return -EINVAL;
+	prop = fdt_getprop(blob, offset, "compatible", &len);
+	if (!prop)
+		return -ENODEV;
+
+	for (i = 0; i < len; i++) {
+		len = strlen(prop);
+		match = of_match;
+		while (match->compatible) {
+			if (!memcmp(match->compatible, prop, len + 1)) {
+				*of_idp = match;
+				return 0;
+			}
+			match++;
 		}
-		of_match++;
+		prop += len + 1;
 	}
 
 	return -ENOENT;
