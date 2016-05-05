@@ -297,6 +297,13 @@
 			reg = <0x4a002e00 0x7c>;
 		};
 
+		dra7_iodelay_core: padconf@4844a000 {
+			compatible = "ti,dra7-iodelay";
+			reg = <0x4844a000 0x0d1c>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
 		sdma: dma-controller@4a056000 {
 			compatible = "ti,omap4430-sdma";
 			reg = <0x4a056000 0x1000>;
@@ -885,13 +892,15 @@
 		};
 
 		mmc2: mmc@480b4000 {
-			compatible = "ti,omap4-hsmmc";
+			compatible = "ti,dra7-hsmmc", "ti,omap4-hsmmc";
 			reg = <0x480b4000 0x400>;
 			interrupts = <GIC_SPI 81 IRQ_TYPE_LEVEL_HIGH>;
 			ti,hwmods = "mmc2";
 			ti,needs-special-reset;
 			dmas = <&sdma 47>, <&sdma 48>;
 			dma-names = "tx", "rx";
+			mmc-hs200-1_8v;
+			mmc-ddr-1_8v;
 			status = "disabled";
 		};
 
