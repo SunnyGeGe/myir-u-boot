@@ -45,4 +45,6 @@
 #define FAT_ENV_FILE                    "uboot.env"
 #define CONFIG_ENV_OVERWRITE
 
+/* Disabled SPL_EXT to avoid .sram overflow error */
+#undef CONFIG_SPL_EXT_SUPPORT
 #endif /* __CONFIG_PANDA_H */
