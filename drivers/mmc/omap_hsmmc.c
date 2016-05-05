@@ -68,10 +68,15 @@ struct omap_hsmmc_data {
 	int wp_gpio;
 #endif
 #endif
+#ifdef CONFIG_DM_MMC
+	uint iov;
+	u8 controller_flags;
+#endif
 };
 
 /* If we fail after 1 second wait, something is really bad */
 #define MAX_RETRY_MS	1000
+#define OMAP_HSMMC_SUPPORTS_DUAL_VOLT		BIT(0)
 
 static int mmc_read_data(struct hsmmc *mmc_base, char *buf, unsigned int size);
 static int mmc_write_data(struct hsmmc *mmc_base, const char *buf,
@@ -218,6 +223,61 @@ void mmc_init_stream(struct hsmmc *mmc_base)
 	writel(readl(&mmc_base->con) & ~INIT_INITSTREAM, &mmc_base->con);
 }
 
+#ifdef CONFIG_DM_MMC
+static void omap_hsmmc_conf_bus_power(struct mmc *mmc)
+{
+	struct hsmmc *mmc_base;
+	struct omap_hsmmc_data *priv = (struct omap_hsmmc_data *)mmc->priv;
+	u32 val;
+
+	mmc_base = priv->base_addr;
+
+	val = readl(&mmc_base->hctl) & ~SDVS_MASK;
+
+	switch (priv->iov) {
+	case IOV_3V3:
+		val |= SDVS_3V3;
+		break;
+	case IOV_3V0:
+		val |= SDVS_3V0;
+		break;
+	case IOV_1V8:
+		val |= SDVS_1V8;
+		break;
+	}
+
+	writel(val, &mmc_base->hctl);
+}
+
+static void omap_hsmmc_set_capabilities(struct mmc *mmc)
+{
+	struct hsmmc *mmc_base;
+	struct omap_hsmmc_data *priv = (struct omap_hsmmc_data *)mmc->priv;
+	u32 val;
+
+	mmc_base = priv->base_addr;
+	val = readl(&mmc_base->capa);
+
+	if (priv->controller_flags & OMAP_HSMMC_SUPPORTS_DUAL_VOLT) {
+		val |= (VS30_3V0SUP | VS18_1V8SUP);
+		priv->iov = IOV_3V0;
+	} else {
+		switch (priv->iov) {
+		case IOV_3V3:
+			val |= VS33_3V3SUP;
+			break;
+		case IOV_3V0:
+			val |= VS30_3V0SUP;
+			break;
+		case IOV_1V8:
+			val |= VS18_1V8SUP;
+			break;
+		}
+	}
+
+	writel(val, &mmc_base->capa);
+}
+#endif
 
 static int omap_hsmmc_init_setup(struct mmc *mmc)
 {
@@ -247,9 +307,15 @@ static int omap_hsmmc_init_setup(struct mmc *mmc)
 			return TIMEOUT;
 		}
 	}
+
+#ifdef CONFIG_DM_MMC
+	omap_hsmmc_set_capabilities(mmc);
+	omap_hsmmc_conf_bus_power(mmc);
+#else
 	writel(DTW_1_BITMODE | SDBP_PWROFF | SDVS_3V0, &mmc_base->hctl);
 	writel(readl(&mmc_base->capa) | VS30_3V0SUP | VS18_1V8SUP,
 		&mmc_base->capa);
+#endif
 
 	reg_val = readl(&mmc_base->con) & RESERVED_MASK;
 
@@ -838,6 +904,9 @@ static int omap_hsmmc_ofdata_to_platdata(struct udevice *dev)
 	cfg->f_max = fdtdec_get_int(fdt, node, "max-frequency", 52000000);
 	cfg->voltages = MMC_VDD_32_33 | MMC_VDD_33_34 | MMC_VDD_165_195;
 	cfg->b_max = CONFIG_SYS_MMC_MAX_BLK_COUNT;
+	if (fdtdec_get_bool(fdt, node, "ti,dual-volt"))
+		priv->controller_flags |= OMAP_HSMMC_SUPPORTS_DUAL_VOLT;
+	priv->iov = fdtdec_get_int(fdt, node, "iov", 1800000);
 
 	priv->cd_inverted = fdtdec_get_bool(fdt, node, "cd-inverted");
 
