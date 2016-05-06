@@ -1142,7 +1142,7 @@ static void eth_status_complete(struct usb_ep *ep, struct usb_request *req)
 			event->bNotificationType, value);
 		if (event->bNotificationType ==
 				USB_CDC_NOTIFY_SPEED_CHANGE) {
-			l_ethdev.network_started = 1;
+			dev->network_started = 1;
 			printf("USB network up!\n");
 		}
 	}
@@ -1330,7 +1330,7 @@ eth_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 			 * that network is working. So we signalize it
 			 * here.
 			 */
-			l_ethdev.network_started = 1;
+			dev->network_started = 1;
 			debug("USB network up!\n");
 			goto done_set_intf;
 		}
@@ -1830,10 +1830,10 @@ static void rndis_control_ack_complete(struct usb_ep *ep,
 		debug("rndis control ack complete --> %d, %d/%d\n",
 			req->status, req->actual, req->length);
 
-	if (!l_ethdev.network_started) {
+	if (!dev->network_started) {
 		if (rndis_get_state(dev->rndis_config)
 				== RNDIS_DATA_INITIALIZED) {
-			l_ethdev.network_started = 1;
+			dev->network_started = 1;
 			printf("USB RNDIS network up!\n");
 		}
 	}
@@ -2389,7 +2389,7 @@ static int usb_eth_init(struct eth_device *netdev, bd_t *bd)
 		timeout = simple_strtoul(getenv("cdc_connect_timeout"),
 						NULL, 10) * CONFIG_SYS_HZ;
 	ts = get_timer(0);
-	while (!l_ethdev.network_started) {
+	while (!dev->network_started) {
 		/* Handle control-c and timeouts */
 		if (ctrlc() || (get_timer(ts) > timeout)) {
 			error("The remote end did not respond in time.");
