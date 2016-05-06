@@ -332,6 +332,7 @@
 #undef CONFIG_DM_MMC
 #undef CONFIG_TIMER
 #undef CONFIG_DM_NAND
+#undef CONFIG_DM_USB
 #endif
 
 #if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_USBETH_SUPPORT)
