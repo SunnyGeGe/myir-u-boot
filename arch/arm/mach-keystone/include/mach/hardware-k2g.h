@@ -74,4 +74,7 @@
 #define K2G_GPIO_DIR_OFFSET		0x0
 #define K2G_GPIO_SETDATA_OFFSET		0x8
 
+/* GPMC */
+#define KS2_GPMC_BASE			0x21818000
+
 #endif /* __ASM_ARCH_HARDWARE_K2G_H */
