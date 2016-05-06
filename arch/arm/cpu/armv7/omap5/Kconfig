@@ -28,4 +28,69 @@ source "board/ti/omap5_uevm/Kconfig"
 source "board/ti/dra7xx/Kconfig"
 source "board/ti/am57xx/Kconfig"
 
+if TARGET_DRA7XX_EVM || TARGET_AM57XX_EVM
+menu "Voltage Domain OPP selections"
+
+choice
+	prompt "MPU Voltage Domain"
+	default DRA7_MPU_OPP_NOM
+        help
+	  Select the OPP for the MPU voltage domain on DRA7xx & AM57xx SoCs
+
+config DRA7_MPU_OPP_NOM
+	bool "OPP NOM"
+
+endchoice
+
+choice
+	prompt "DSPEVE Voltage Domain"
+        help
+	  Select the OPP for the DSPEVE voltage domain on DRA7xx and AM57xx SoCs
+
+config DRA7_DSPEVE_OPP_NOM
+	bool "OPP NOM"
+
+config DRA7_DSPEVE_OPP_OD
+	bool "OPP OD"
+
+config DRA7_DSPEVE_OPP_HIGH
+	bool "OPP HIGH"
+
+endchoice
+
+choice
+	prompt "IVA Voltage Domain"
+        help
+	  Select the OPP for the IVA voltage domain on DRA7xx and AM57xx SoCs
+
+config DRA7_IVA_OPP_NOM
+	bool "OPP NOM"
+
+config DRA7_IVA_OPP_OD
+	bool "OPP OD"
+
+config DRA7_IVA_OPP_HIGH
+	bool "OPP HIGH"
+
+endchoice
+
+choice
+	prompt "GPU Voltage Domain"
+        help
+	  Select the OPP for the GPU voltage domain on DRA7xx and AM57xx SoCs
+
+config DRA7_GPU_OPP_NOM
+	bool "OPP NOM"
+
+config DRA7_GPU_OPP_OD
+	bool "OPP OD"
+
+config DRA7_GPU_OPP_HIGH
+	bool "OPP HIGH"
+
+endchoice
+
+endmenu
+endif
+
 endif
