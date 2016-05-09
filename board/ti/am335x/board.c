@@ -960,8 +960,10 @@ int ft_board_setup(void *fdt, bd_t *bd)
 	return 0;
 
 no_node:
-	printf("Node %s not found.\n", path);
-	return offs;
+	printf("Node %s not found. Please update DTB.\n", path);
+
+	/* Return 0 as we don't want to prevent booting with older DTBs */
+	return 0;
 
 disable_failed:
 	printf("Could not disable node %s: %s\n",
