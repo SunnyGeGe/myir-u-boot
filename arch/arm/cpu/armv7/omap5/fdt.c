@@ -182,34 +182,22 @@ const char *dra7_opp_dsp_clk_names[OPP_DSP_CLK_NUM] = {
 	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_dsp_m3x2_ck",
 };
 
-const char *dra7_opp_iva_clk_names[OPP_DSP_CLK_NUM] = {
+const char *dra7_opp_iva_clk_names[OPP_IVA_CLK_NUM] = {
 	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_iva_ck",
 	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_iva_m2_ck",
 };
 
 /* DSPEVE voltage domain */
 #if defined(CONFIG_DRA7_DSPEVE_OPP_HIGH) /* OPP_HIGH */
-u32 dra752_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
+u32 dra7_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
 	750000000, 750000000, 500000000,
 };
-
-u32 dra722_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
-	700000000, 700000000, 466666667,
-};
 #elif defined(CONFIG_DRA7_DSPEVE_OPP_OD) /* OPP_OD */
-u32 dra722_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
-	700000000, 700000000, 466666667,
-};
-
-u32 dra752_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
+u32 dra7_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
 	700000000, 700000000, 466666667,
 };
 #else /* OPP_NOM */
-u32 dra752_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
-	600000000, 600000000, 400000000,
-};
-
-u32 dra722_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
+u32 dra7_opp_dsp_clk_rates[OPP_DSP_CLK_NUM] = {
 	600000000, 600000000, 400000000,
 };
 #endif
@@ -244,7 +232,7 @@ static int ft_fixup_clocks(void *fdt, const char **paths, u32 *rates, int num)
 		ret = fdt_setprop_u32(fdt, offs, "assigned-clock-rates",
 				      rates[i]);
 		if (ret < 0) {
-			debug("Could not add reg property to node %s: %s\n",
+			debug("Could not add assigned-clock-rates property to clock node %s: %s\n",
 			      paths[i], fdt_strerror(ret));
 			return ret;
 		}
@@ -264,8 +252,7 @@ static void ft_opp_clock_fixups(void *fdt, bd_t *bd)
 
 	/* fixup DSP clocks */
 	clk_names = dra7_opp_dsp_clk_names;
-	clk_rates = is_dra72x() ? dra722_opp_dsp_clk_rates :
-				  dra752_opp_dsp_clk_rates;
+	clk_rates = dra7_opp_dsp_clk_rates;
 	ret = ft_fixup_clocks(fdt, clk_names, clk_rates, OPP_DSP_CLK_NUM);
 	if (ret) {
 		printf("ft_fixup_clocks failed for DSP voltage domain: %s\n",
