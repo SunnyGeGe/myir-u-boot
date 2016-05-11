@@ -177,14 +177,14 @@ static void ft_hs_fixups(void *fdt, bd_t *bd)
 #define OPP_IVA_CLK_NUM	2
 
 const char *dra7_opp_dsp_clk_names[OPP_DSP_CLK_NUM] = {
-	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_dsp_ck",
-	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_dsp_m2_ck",
-	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_dsp_m3x2_ck",
+	"dpll_dsp_ck",
+	"dpll_dsp_m2_ck",
+	"dpll_dsp_m3x2_ck",
 };
 
 const char *dra7_opp_iva_clk_names[OPP_IVA_CLK_NUM] = {
-	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_iva_ck",
-	"/ocp/l4@4a000000/cm_core_aon@5000/clocks/dpll_iva_m2_ck",
+	"dpll_iva_ck",
+	"dpll_iva_m2_ck",
 };
 
 /* DSPEVE voltage domain */
@@ -217,23 +217,46 @@ u32 dra7_opp_iva_clk_rates[OPP_IVA_CLK_NUM] = {
 };
 #endif
 
-static int ft_fixup_clocks(void *fdt, const char **paths, u32 *rates, int num)
+static int ft_fixup_clocks(void *fdt, const char **names, u32 *rates, int num)
 {
-	int offs, ret, i;
+	int offs, node_offs, ret, i;
+	uint32_t phandle;
+
+	offs = fdt_path_offset(fdt, "/ocp/l4@4a000000/cm_core_aon@5000/clocks");
+	if (offs < 0) {
+		debug("Could not find cm_core_aon clocks node path offset : %s\n",
+		      fdt_strerror(offs));
+		return offs;
+	}
 
 	for (i = 0; i < num; i++) {
-		offs = fdt_path_offset(fdt, paths[i]);
-		if (offs < 0) {
-			debug("Could not find node path offset %s: %s\n",
-			      paths[i], fdt_strerror(offs));
+		node_offs = fdt_subnode_offset(fdt, offs, names[i]);
+		if (node_offs < 0) {
+			debug("Could not find clock sub-node %s: %s\n",
+			      names[i], fdt_strerror(node_offs));
 			return offs;
 		}
 
-		ret = fdt_setprop_u32(fdt, offs, "assigned-clock-rates",
+		phandle = fdt_get_phandle(fdt, node_offs);
+		if (!phandle) {
+			debug("Could not find phandle for clock %s\n",
+			      names[i]);
+			return -1;
+		}
+
+		ret = fdt_setprop_u32(fdt, node_offs, "assigned-clocks",
+				      phandle);
+		if (ret < 0) {
+			debug("Could not add assigned-clocks property to clock node %s: %s\n",
+			      names[i], fdt_strerror(ret));
+			return ret;
+		}
+
+		ret = fdt_setprop_u32(fdt, node_offs, "assigned-clock-rates",
 				      rates[i]);
 		if (ret < 0) {
 			debug("Could not add assigned-clock-rates property to clock node %s: %s\n",
-			      paths[i], fdt_strerror(ret));
+			      names[i], fdt_strerror(ret));
 			return ret;
 		}
 	}
