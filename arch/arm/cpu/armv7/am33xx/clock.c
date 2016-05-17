@@ -237,6 +237,7 @@ void prcm_init()
 	enable_basic_clocks();
 	scale_vcores();
 	setup_dplls();
+	timer_init();
 }
 
 void rtc_only_prcm_init(void)
