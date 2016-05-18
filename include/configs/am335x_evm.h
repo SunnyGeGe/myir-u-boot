@@ -43,6 +43,9 @@
 #define CONFIG_CMD_GPT
 #define CONFIG_EFI_PARTITION
 
+/* Enable Atheros phy driver */
+#define CONFIG_PHY_ATHEROS
+
 #ifdef CONFIG_NAND
 #define NANDARGS \
 	"mtdids=" MTDIDS_DEFAULT "\0" \
