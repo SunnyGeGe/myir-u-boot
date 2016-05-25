@@ -1270,6 +1270,8 @@ static void cpsw_phy_sel(struct cpsw_priv *priv, const char *compat,
 {
 	if (!strcmp(compat, "ti,am3352-cpsw-phy-sel"))
 		cpsw_gmii_sel_am3352(priv, phy_mode);
+	if (!strcmp(compat, "ti,am43xx-cpsw-phy-sel"))
+		cpsw_gmii_sel_am3352(priv, phy_mode);
 	else if (!strcmp(compat, "ti,dra7xx-cpsw-phy-sel"))
 		cpsw_gmii_sel_dra7xx(priv, phy_mode);
 }
