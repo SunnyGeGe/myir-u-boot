@@ -1385,6 +1385,10 @@ static int cpsw_eth_ofdata_to_platdata(struct udevice *dev)
 				return -ENOENT;
 			}
 
+			if (fdt_get_property(fdt, subnode, "rmii-clock-ext",
+					     NULL))
+				priv->data.rmii_clock_external = true;
+
 			phy_sel_compat = fdt_getprop(fdt, subnode, "compatible",
 						     NULL);
 			if (!phy_sel_compat) {
