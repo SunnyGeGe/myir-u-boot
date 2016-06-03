@@ -54,6 +54,7 @@ static int spl_nand_load_element(int offset, struct image_header *header)
 		debug("Found FIT\n");
 		load.dev = NULL;
 		load.priv = NULL;
+		load.filename = NULL;
 		load.bl_len = 1;
 		load.read = spl_nand_fit_read;
 		return spl_load_simple_fit(&load, offset, header);

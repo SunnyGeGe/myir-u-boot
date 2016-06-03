@@ -15,6 +15,7 @@
 #include <fat.h>
 #include <errno.h>
 #include <image.h>
+#include <libfdt.h>
 
 static int fat_registered;
 
@@ -39,17 +40,18 @@ static int spl_register_fat_device(struct blk_desc *block_dev, int partition)
 	return err;
 }
 
-static int h_spl_fit_read(struct spl_load_info *load, const char *filename,
-			  void *buf, ulong file_offset, ulong size)
+static ulong spl_fit_read(struct spl_load_info *load, ulong file_offset,
+			  ulong size, void *buf)
 {
 	loff_t actread;
 	int ret;
+	char *filename = (char *)load->filename;
 
 	ret = fat_read_file(filename, buf, file_offset, size, &actread);
 	if (ret)
 		return ret;
-	else
-		return actread;
+
+	return actread;
 }
 
 int spl_load_image_fat(struct blk_desc *block_dev,
@@ -70,14 +72,17 @@ int spl_load_image_fat(struct blk_desc *block_dev,
 	if (err <= 0)
 		goto end;
 
-	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT)) {
+	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
+	    image_get_magic(header) == FDT_MAGIC) {
 		struct spl_load_info load;
 
 		debug("Found FIT\n");
+		load.read = spl_fit_read;
+		load.bl_len = 1;
+		load.filename = (void *)filename;
 		load.priv = NULL;
-		load.fs_read = h_spl_fit_read;
 
-		err = spl_fs_load_simple_fit(&load, filename, header);
+		return spl_load_simple_fit(&load, 0, header);
 	} else {
 		spl_parse_image_header(header);
 

@@ -99,6 +99,7 @@ int spl_spi_load_image(void)
 			debug("Found FIT\n");
 			load.dev = flash;
 			load.priv = NULL;
+			load.filename = NULL;
 			load.bl_len = 1;
 			load.read = spl_spi_fit_read;
 			err = spl_load_simple_fit(&load,
