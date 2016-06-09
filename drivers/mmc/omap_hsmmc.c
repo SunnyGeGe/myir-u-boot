@@ -1570,7 +1570,7 @@ static int omap_hsmmc_platform_fixup(struct mmc *mmc)
 	struct mmc_config *cfg = &priv->cfg;
 
 	if (platform_fixup_disable_uhs_mode())
-		cfg->host_caps = MMC_MODE_HS_52MHz | MMC_MODE_HS;
+		cfg->host_caps &= ~MMC_MODE_HS200;
 
 	return 0;
 }
