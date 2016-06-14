@@ -524,9 +524,9 @@ const struct pad_conf_entry core_padconf_array_essential_am571x_idk[] = {
 	{GPMC_CLK, (M14 | PIN_INPUT_PULLUP)},	/* gpmc_clk.gpio2_22 */
 	{GPMC_ADVN_ALE, (M14 | PIN_INPUT_PULLUP)},	/* gpmc_advn_ale.gpio2_23 */
 	{GPMC_OEN_REN, (M14 | PIN_INPUT_PULLUP)},	/* gpmc_oen_ren.gpio2_24 */
-	{GPMC_WEN, (M14 | PIN_INPUT_PULLDOWN)},	/* gpmc_wen.gpio2_25 */
+	{GPMC_WEN, (M14 | PIN_INPUT_PULLUP)},	/* gpmc_wen.gpio2_25 */
 	{GPMC_BEN0, (M14 | PIN_INPUT_PULLDOWN)},	/* gpmc_ben0.gpio2_26 */
-	{GPMC_BEN1, (M14 | PIN_INPUT_PULLDOWN)},	/* gpmc_ben1.gpio2_27 */
+	{GPMC_BEN1, (M14 | PIN_INPUT_PULLUP)},	/* gpmc_ben1.gpio2_27 */
 	{GPMC_WAIT0, (M14 | PIN_INPUT_PULLDOWN | SLEWCONTROL)},	/* gpmc_wait0.gpio2_28 */
 	{VIN2A_CLK0, (M14 | PIN_INPUT_PULLUP)},	/* vin2a_clk0.gpio3_28 */
 	{VIN2A_DE0, (M14 | PIN_INPUT_PULLUP)},	/* vin2a_de0.gpio3_29 */
