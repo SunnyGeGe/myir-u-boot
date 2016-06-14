@@ -888,31 +888,32 @@ const struct iodelay_cfg_entry iodelay_cfg_array_am571x_idk[] = {
 	{0x0170, 0, 0},		/* CFG_GPMC_A16_OUT */
 	{0x0174, 2062, 2350},	/* CFG_GPMC_A17_IN */
 	{0x0188, 0, 0},		/* CFG_GPMC_A18_OUT */
-	{0x0374, 121, 0},	/* CFG_GPMC_CS2_OUT */
-	{0x06F0, 359, 0},	/* CFG_RGMII0_RXC_IN */
-	{0x06FC, 129, 1896},	/* CFG_RGMII0_RXCTL_IN */
-	{0x0708, 80, 1391},	/* CFG_RGMII0_RXD0_IN */
-	{0x0714, 196, 1522},	/* CFG_RGMII0_RXD1_IN */
-	{0x0720, 40, 1860},	/* CFG_RGMII0_RXD2_IN */
-	{0x072C, 0, 1965},	/* CFG_RGMII0_RXD3_IN */
-	{0x0740, 300, 200},	/* CFG_RGMII0_TXC_OUT */
-	{0x074C, 200, 0},	/* CFG_RGMII0_TXCTL_OUT */
-	{0x0758, 250, 60},	/* CFG_RGMII0_TXD0_OUT */
-	{0x0764, 0, 0},		/* CFG_RGMII0_TXD1_OUT */
-	{0x0770, 150, 0},	/* CFG_RGMII0_TXD2_OUT */
-	{0x077C, 250, 60},	/* CFG_RGMII0_TXD3_OUT */
-	{0x0A70, 280, 860},	/* CFG_VIN2A_D12_OUT */
-	{0x0A7C, 0, 360},	/* CFG_VIN2A_D13_OUT */
-	{0x0A88, 280, 240},	/* CFG_VIN2A_D14_OUT */
-	{0x0A94, 02, 0},	/* CFG_VIN2A_D15_OUT */
-	{0x0AA0, 120, 0},	/* CFG_VIN2A_D16_OUT */
-	{0x0AAC, 60, 0},		/* CFG_VIN2A_D17_OUT */
-	{0x0AB0, 596, 0},	/* CFG_VIN2A_D18_IN */
-	{0x0ABC, 314, 980},	/* CFG_VIN2A_D19_IN */
-	{0x0AD4, 241, 1536},	/* CFG_VIN2A_D20_IN */
-	{0x0AE0, 103, 1689},	/* CFG_VIN2A_D21_IN */
-	{0x0AEC, 161, 1563},	/* CFG_VIN2A_D22_IN */
-	{0x0AF8, 0, 1613},	/* CFG_VIN2A_D23_IN */
+	{0x0374, 121, 0},       /* CFG_GPMC_CS2_OUT */
+	{0x06F0, 413, 0},       /* CFG_RGMII0_RXC_IN */
+	{0x06FC, 27, 2296},     /* CFG_RGMII0_RXCTL_IN */
+	{0x0708, 3, 1721},      /* CFG_RGMII0_RXD0_IN */
+	{0x0714, 134, 1786},    /* CFG_RGMII0_RXD1_IN */
+	{0x0720, 40, 1966},     /* CFG_RGMII0_RXD2_IN */
+	{0x072C, 0, 2057},      /* CFG_RGMII0_RXD3_IN */
+	{0x0740, 0, 60},        /* CFG_RGMII0_TXC_OUT */
+	{0x074C, 0, 60},        /* CFG_RGMII0_TXCTL_OUT */
+	{0x0758, 0, 60},        /* CFG_RGMII0_TXD0_OUT */
+	{0x0764, 0, 0},         /* CFG_RGMII0_TXD1_OUT */
+	{0x0770, 0, 60},        /* CFG_RGMII0_TXD2_OUT */
+	{0x077C, 0, 120},       /* CFG_RGMII0_TXD3_OUT */
+	{0x0A70, 0, 0},         /* CFG_VIN2A_D12_OUT */
+	{0x0A7C, 170, 0},       /* CFG_VIN2A_D13_OUT */
+	{0x0A88, 150, 0},       /* CFG_VIN2A_D14_OUT */
+	{0x0A94, 0, 0},         /* CFG_VIN2A_D15_OUT */
+	{0x0AA0, 60, 0},        /* CFG_VIN2A_D16_OUT */
+	{0x0AAC, 60, 0},        /* CFG_VIN2A_D17_OUT */
+	{0x0AB0, 530, 0},       /* CFG_VIN2A_D18_IN */
+	{0x0ABC, 71, 1099},     /* CFG_VIN2A_D19_IN */
+	{0x0AC8, 2229, 10},     /* CFG_VIN2A_D1_IN */
+	{0x0AD4, 142, 1337},    /* CFG_VIN2A_D20_IN */
+	{0x0AE0, 114, 1517},    /* CFG_VIN2A_D21_IN */
+	{0x0AEC, 171, 1331},    /* CFG_VIN2A_D22_IN */
+	{0x0AF8, 0, 1328},      /* CFG_VIN2A_D23_IN */
 };
 
 #endif
