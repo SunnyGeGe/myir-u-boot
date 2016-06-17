@@ -62,6 +62,9 @@ int dram_init(void)
 
 	if (ddr3_size)
 		ddr3_init_ecc(KS2_DDR3A_EMIF_CTRL_BASE, ddr3_size);
+	else
+		ddr3_init_ecc(KS2_DDR3A_EMIF_CTRL_BASE, gd->ram_size);
+
 	return 0;
 }
 
