@@ -466,8 +466,8 @@ const struct pad_conf_entry core_padconf_array_essential_am572x_idk[] = {
 	{MMC1_SDWP, (M14 | PIN_OUTPUT)},	/* mmc1_sdwp.gpio6_28 */
 	{SPI1_CS2, (M14 | PIN_INPUT_PULLDOWN)},	/* spi1_cs2.gpio7_12 */
 	{SPI1_CS3, (M6 | PIN_INPUT_PULLUP | SLEWCONTROL)},	/* spi1_cs3.hdmi1_cec */
-	{DCAN1_TX, (M0 | PIN_INPUT_PULLUP | SLEWCONTROL)},	/* dcan1_tx.dcan1_tx */
-	{DCAN1_RX, (M0 | PIN_INPUT_PULLUP | SLEWCONTROL)},	/* dcan1_rx.dcan1_rx */
+	{DCAN1_TX, (M15 | PULL_UP)},	/* dcan1_tx.safe for dcan1_tx */
+	{DCAN1_RX, (M15 | PULL_UP)},	/* dcan1_rx.safe for dcan1_rx */
 	{UART2_CTSN, (M2 | PIN_INPUT_SLEW)},	/* uart2_ctsn.uart3_rxd */
 	{UART2_RTSN, (M1 | PIN_INPUT_SLEW)},	/* uart2_rtsn.uart3_txd */
 	{UART1_RXD, (M14 | PIN_INPUT_PULLDOWN)},	/* uart1_rxd.gpio7_22 */
@@ -687,8 +687,8 @@ const struct pad_conf_entry core_padconf_array_essential_am571x_idk[] = {
 	{SPI2_D1, (M0 | PIN_INPUT_SLEW)},	/* spi2_d1.spi2_d1 */
 	{SPI2_D0, (M0 | PIN_INPUT_SLEW)},	/* spi2_d0.spi2_d0 */
 	{SPI2_CS0, (M0 | PIN_INPUT_PULLUP | SLEWCONTROL)},	/* spi2_cs0.spi2_cs0 */
-	{DCAN1_TX, (M0 | PIN_INPUT_PULLUP | SLEWCONTROL)},	/* dcan1_tx.dcan1_tx */
-	{DCAN1_RX, (M0 | PIN_INPUT_PULLUP | SLEWCONTROL)},	/* dcan1_rx.dcan1_rx */
+	{DCAN1_TX, (M15 | PULL_UP)},	/* dcan1_tx.safe for dcan1_tx */
+	{DCAN1_RX, (M15 | PULL_UP)},	/* dcan1_rx.safe for dcan1_rx */
 	{UART1_RXD, (M14 | PIN_INPUT_PULLUP | SLEWCONTROL)},	/* uart1_rxd.gpio7_22 */
 	{UART1_CTSN, (M14 | PIN_INPUT_PULLDOWN)},	/* uart1_ctsn.gpio7_24 */
 	{UART1_RTSN, (M14 | PIN_INPUT_PULLDOWN)},	/* uart1_rtsn.gpio7_25 */
