@@ -37,6 +37,11 @@ obj-$(CONFIG_SPL_USB_HOST_SUPPORT) += usb/host/
 obj-$(CONFIG_OMAP_USB_PHY) += usb/phy/
 obj-$(CONFIG_SPL_SATA_SUPPORT) += block/
 
+ifdef CONFIG_SPL_USBETH_SUPPORT
+obj-$(CONFIG_USB_DWC3_GADGET) += usb/dwc3/
+obj-$(CONFIG_USB_DWC3_GADGET) += usb/gadget/udc/
+endif
+
 else
 
 obj-y += adc/
