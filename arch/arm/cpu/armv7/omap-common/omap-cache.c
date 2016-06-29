@@ -51,7 +51,7 @@ void sram_bank_mmu_setup(phys_addr_t start, phys_addr_t size)
 	size = size >> MMU_SECTION_SHIFT;
 	end = start + size;
 
-	for (i = start; i < end; i++)
+	for (i = start; i <= end; i++)
 		set_section_dcache(i, ARMV7_DCACHE_WRITEBACK);
 }
 #endif
