@@ -89,6 +89,7 @@ struct omap_hsmmc_data {
 	struct omap_hsmmc_adma_desc *adma_desc_table;
 	uint desc_slot;
 	int node;
+	char *version;
 #ifdef CONFIG_IODELAY_RECALIBRATION
 	struct omap_hsmmc_pinctrl_state *default_pinctrl_state;
 	struct omap_hsmmc_pinctrl_state *hs_pinctrl_state;
@@ -1461,10 +1462,8 @@ omap_hsmmc_get_pinctrl_by_mode(struct mmc *mmc, char *mode)
 	}
 
 	index = fdt_find_string(fdt, node, "pinctrl-names", mode);
-	if (index < 0) {
-		printf("fail to find %s mode %s\n", mode, fdt_strerror(index));
+	if (index < 0)
 		goto err_pinctrl_state;
-	}
 
 	sprintf(prop_name, "pinctrl-%d", index);
 
@@ -1490,19 +1489,27 @@ err_pinctrl_state:
 	return 0;
 }
 
-#define OMAP_HSMMC_SETUP_PINCTRL(capmask, mode)			\
-	do {							\
-		struct omap_hsmmc_pinctrl_state *s;			\
-		if (!(cfg->host_caps & capmask))		\
-			break;					\
-								\
-		s = omap_hsmmc_get_pinctrl_by_mode(mmc, #mode);	\
-		if (!s) {					\
-			printf("no pinctrl for %s\n", #mode);	\
-			cfg->host_caps &= ~(capmask);		\
+#define OMAP_HSMMC_SETUP_PINCTRL(capmask, mode)				\
+	do {								\
+		struct omap_hsmmc_pinctrl_state *s = NULL;		\
+		char str[20];						\
+		if (!(cfg->host_caps & capmask))			\
+			break;						\
+									\
+		if (priv->version) {					\
+			sprintf(str, "%s-%s", #mode, priv->version);	\
+			s = omap_hsmmc_get_pinctrl_by_mode(mmc, str);	\
+		}							\
+									\
+		if (!s)							\
+			s = omap_hsmmc_get_pinctrl_by_mode(mmc, #mode);	\
+									\
+		if (!s) {						\
+			printf("no pinctrl for %s\n", #mode);		\
+			cfg->host_caps &= ~(capmask);			\
 		} else {						\
-			priv->mode##_pinctrl_state = s;		\
-		}						\
+			priv->mode##_pinctrl_state = s;			\
+		}							\
 	} while (0)
 
 static int omap_hsmmc_get_pinctrl_state(struct mmc *mmc)
@@ -1569,8 +1576,12 @@ static int omap_hsmmc_platform_fixup(struct mmc *mmc)
 	struct omap_hsmmc_data *priv = (struct omap_hsmmc_data *)mmc->priv;
 	struct mmc_config *cfg = &priv->cfg;
 
-	if (platform_fixup_disable_uhs_mode())
+	priv->version = NULL;
+
+	if (platform_fixup_disable_uhs_mode()) {
+		priv->version = "rev11";
 		cfg->host_caps &= ~MMC_MODE_HS200;
+	}
 
 	return 0;
 }
