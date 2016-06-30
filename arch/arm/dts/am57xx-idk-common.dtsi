@@ -293,10 +293,24 @@
 	dr_mode = "otg";
 };
 
+&mmc1 {
+	status = "okay";
+	vmmc-supply = <&v3_3d>;
+	vmmc_aux-supply = <&ldo1_reg>;
+	bus-width = <4>;
+	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>; /* gpio 219 */
+	max-frequency = <192000000>;
+};
+
 &mmc2 {
 	status = "okay";
 	vmmc-supply = <&v3_3d>;
 	bus-width = <8>;
 	ti,non-removable;
 	max-frequency = <96000000>;
+	/*
+	 * eMMC on AM57xx IDK boards cannot support HS200 mode because
+	 * the IO voltage is tied to 3.3V
+	 */
+	/delete-property/ mmc-hs200-1_8v;
 };
