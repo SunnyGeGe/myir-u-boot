@@ -175,6 +175,7 @@ static void ft_hs_fixups(void *fdt, bd_t *bd)
 #if defined(CONFIG_TARGET_DRA7XX_EVM) || defined(CONFIG_TARGET_AM57XX_EVM)
 #define OPP_DSP_CLK_NUM	3
 #define OPP_IVA_CLK_NUM	2
+#define OPP_GPU_CLK_NUM	2
 
 const char *dra7_opp_dsp_clk_names[OPP_DSP_CLK_NUM] = {
 	"dpll_dsp_ck",
@@ -185,6 +186,11 @@ const char *dra7_opp_dsp_clk_names[OPP_DSP_CLK_NUM] = {
 const char *dra7_opp_iva_clk_names[OPP_IVA_CLK_NUM] = {
 	"dpll_iva_ck",
 	"dpll_iva_m2_ck",
+};
+
+const char *dra7_opp_gpu_clk_names[OPP_GPU_CLK_NUM] = {
+	"dpll_gpu_ck",
+	"dpll_gpu_m2_ck",
 };
 
 /* DSPEVE voltage domain */
@@ -214,6 +220,21 @@ u32 dra7_opp_iva_clk_rates[OPP_IVA_CLK_NUM] = {
 #else /* OPP_NOM */
 u32 dra7_opp_iva_clk_rates[OPP_IVA_CLK_NUM] = {
 	1165000000, 388333334,
+};
+#endif
+
+/* GPU voltage domain */
+#if defined(CONFIG_DRA7_GPU_OPP_HIGH) /* OPP_HIGH */
+u32 dra7_opp_gpu_clk_rates[OPP_GPU_CLK_NUM] = {
+	1064000000, 532000000,
+};
+#elif defined(CONFIG_DRA7_GPU_OPP_OD) /* OPP_OD */
+u32 dra7_opp_gpu_clk_rates[OPP_GPU_CLK_NUM] = {
+	1000000000, 500000000,
+};
+#else /* OPP_NOM */
+u32 dra7_opp_gpu_clk_rates[OPP_GPU_CLK_NUM] = {
+	1277000000, 425666667,
 };
 #endif
 
@@ -289,6 +310,16 @@ static void ft_opp_clock_fixups(void *fdt, bd_t *bd)
 	ret = ft_fixup_clocks(fdt, clk_names, clk_rates, OPP_IVA_CLK_NUM);
 	if (ret) {
 		printf("ft_fixup_clocks failed for IVA voltage domain: %s\n",
+		       fdt_strerror(ret));
+		return;
+	}
+
+	/* fixup GPU clocks */
+	clk_names = dra7_opp_gpu_clk_names;
+	clk_rates = dra7_opp_gpu_clk_rates;
+	ret = ft_fixup_clocks(fdt, clk_names, clk_rates, OPP_GPU_CLK_NUM);
+	if (ret) {
+		printf("ft_fixup_clocks failed for GPU voltage domain: %s\n",
 		       fdt_strerror(ret));
 		return;
 	}
