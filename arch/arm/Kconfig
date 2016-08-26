@@ -382,6 +382,22 @@ config TARGET_MYD_C335X
 	select DM_SERIAL
 	select DM_GPIO
 
+config TARGET_MYD_J335X
+	bool "Support myd_j335x"
+	select CPU_V7
+	select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
+
+config TARGET_MYD_Y335X
+	bool "Support myd_y335x"
+	select CPU_V7
+	select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
+
 config TARGET_AM335X_SL50
 	bool "Support am335x_sl50"
 	select CPU_V7
@@ -892,6 +908,8 @@ source "board/woodburn/Kconfig"
 source "board/work-microwave/work_92105/Kconfig"
 source "board/zipitz2/Kconfig"
 source "board/myirtech/myd_c335x/Kconfig"
+source "board/myirtech/myd_j335x/Kconfig"
+source "board/myirtech/myd_y335x/Kconfig"
 
 source "arch/arm/Kconfig.debug"
 

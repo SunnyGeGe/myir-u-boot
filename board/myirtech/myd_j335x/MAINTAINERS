@@ -1,0 +1,6 @@
+MYD_J335X BOARD
+M:	Sunny Guo <sunny.guo@myirtech.com>
+S:	Maintained
+F:	board/myirtech/myd_j335x/
+F:	include/configs/myd_j335x.h
+F:	configs/myd_j335x_defconfig
