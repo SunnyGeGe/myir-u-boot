@@ -67,6 +67,30 @@
 #else
 #define NANDARGS ""
 #endif
+#undef NETARGS
+#ifdef CONFIG_CMD_NET
+#define NETARGS \
+        "static_ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}:${hostname}" \
+                "::off\0" \
+        "nfsopts=nolock\0" \
+        "rootpath=/export/rootfs\0" \
+        "netloadimage=tftp ${loadaddr} ${bootfile}\0" \
+        "netloadfdt=tftp ${fdtaddr} ${fdtfile}\0" \
+        "netargs=setenv bootargs console=${console} " \
+                "${optargs} " \
+                "root=/dev/nfs " \
+                "nfsroot=${serverip}:${rootpath},${nfsopts} rw " \
+                "ip=dhcp\0" \
+        "netboot=echo Booting from network ...; " \
+                "setenv autoload no; " \
+                "run netloadimage; " \
+                "run netloadfdt; " \
+                "run netargs; " \
+                "bootz ${loadaddr} - ${fdtaddr}\0"
+#else
+#define NETARGS ""
+#endif
+
 
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
