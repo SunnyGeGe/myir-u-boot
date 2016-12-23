@@ -1,6 +1,7 @@
 #
 # SPDX-License-Identifier:	GPL-2.0+
 #
+dtb-$(CONFIG_TARGET_MYD_C437X) += myd_c437x.dtb
 
 dtb-$(CONFIG_S5PC100) += s5pc1xx-smdkc100.dtb
 dtb-$(CONFIG_S5PC110) += s5pc1xx-goni.dtb

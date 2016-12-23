@@ -1,0 +1,5 @@
+config MYIR_I2C_BOARD_DETECT
+	bool "Support for Board detection for MYIR platforms"
+	help
+	   Support for detection board information on MYIRTECH's
+	   Evaluation Boards which have I2C based EEPROM detection

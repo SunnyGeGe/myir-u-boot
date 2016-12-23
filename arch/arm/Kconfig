@@ -398,6 +398,11 @@ config TARGET_MYD_Y335X
 	select DM_SERIAL
 	select DM_GPIO
 
+config TARGET_MYD_C437X
+	bool "Support myd_c437x of myirtech.com"
+	select CPU_V7
+	select SUPPORT_SPL
+
 config TARGET_AM335X_SL50
 	bool "Support am335x_sl50"
 	select CPU_V7
@@ -910,6 +915,7 @@ source "board/zipitz2/Kconfig"
 source "board/myirtech/myd_c335x/Kconfig"
 source "board/myirtech/myd_j335x/Kconfig"
 source "board/myirtech/myd_y335x/Kconfig"
+source "board/myirtech/myd_c437x/Kconfig"
 
 source "arch/arm/Kconfig.debug"
 

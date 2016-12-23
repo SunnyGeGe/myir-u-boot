@@ -1,0 +1,6 @@
+MYD_C437X BOARDS
+M:	Sunny.Guo <sunny.guo@myirtech.com>
+S:	Maintained
+F:	board/myirtech/myd_c437x/
+F:	include/configs/myd_c437x.h
+F:	configs/myd_c437x_defconfig
