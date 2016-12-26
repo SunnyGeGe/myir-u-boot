@@ -106,7 +106,7 @@ int board_init(void)
 int board_late_init(void)
 {
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	set_board_info_env("myd_c437x");
+	set_board_info_env("myd_c437x_idk");
 #endif
 	return 0;
 }

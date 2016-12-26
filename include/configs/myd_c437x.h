@@ -28,6 +28,9 @@
 
 #include <asm/arch/omap.h>
 
+#define CONFIG_HSMMC2_8BIT
+#define CONFIG_SUPPORT_EMMC_BOOT
+
 /* NS16550 Configuration */
 #define CONFIG_SYS_NS16550_CLK		48000000
 #if defined(CONFIG_SPL_BUILD) || !defined(CONFIG_DM_SERIAL)
@@ -355,6 +358,8 @@
 			"setenv fdtfile am437x-idk-evm.dtb; fi; " \
 		"if test $board_name = myd_c437x; then " \
 			"setenv fdtfile myd_c437x.dtb; fi; " \
+		"if test $board_name = myd_c437x_idk; then " \
+			"setenv fdtfile myd_c437x_idk.dtb; fi; " \
 		"if test $fdtfile = undefined; then " \
 			"echo WARNING: Could not determine device tree; fi; \0" \
 	NANDARGS \
@@ -364,7 +369,24 @@
 #define CONFIG_BOOTCOMMAND \
 	"run findfdt; " \
 	"run envboot;" \
-	"run mmcboot;" \
+	"mmc dev 0;" \
+	"if mmc rescan; then " \
+		"setenv mmcdev 0;" \
+		"setenv devtype mmc" \
+		"setenv devnum 0;" \
+		"setenv bootpart 0:2; " \
+		"run findfdt; " \
+		"run mmcboot;" \
+	"fi; " \
+	"mmc dev 1; " \
+	"if mmc rescan; then " \
+		"setenv mmcdev 1;" \
+		"setenv devtype mmc;" \
+		"setenv devnum 1;" \
+		"setenv bootpart 1:2; " \
+		"run findfdt; " \
+		"run mmcboot;" \
+	"fi; " \
 	"run usbboot;" \
 	NANDBOOT \
 
