@@ -1016,7 +1016,7 @@ int _cpsw_register(struct cpsw_priv *priv)
 
 	cpsw_mdio_init(priv->dev->name, data->mdio_base, data->mdio_div);
 	priv->bus = miiphy_get_dev_by_name(priv->dev->name);
-	for_active_slave(slave, priv)
+	for_each_slave(slave, priv)
 		cpsw_phy_init(priv, slave);
 
 	return 0;

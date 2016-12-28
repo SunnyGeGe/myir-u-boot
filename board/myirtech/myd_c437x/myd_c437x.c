@@ -231,9 +231,29 @@ static struct cpsw_slave_data cpsw_slaves[] = {
 		.phy_addr	= 0,
 	},
 	{
+		.slave_reg_ofs	= 0x208,
+		.sliver_reg_ofs	= 0xd80,
+		.phy_addr	= 1,
+	},
+	{
+		.slave_reg_ofs	= 0x208,
+		.sliver_reg_ofs	= 0xd80,
+		.phy_addr	= 4,
+	},
+	{
 		.slave_reg_ofs	= 0x308,
 		.sliver_reg_ofs	= 0xdc0,
 		.phy_addr	= 1,
+	},
+	{
+		.slave_reg_ofs	= 0x308,
+		.sliver_reg_ofs = 0xdc0,
+		.phy_addr	= 4,
+	},
+	{
+		.slave_reg_ofs	= 0x308,
+		.sliver_reg_ofs = 0xdc0,
+		.phy_addr	= 6,
 	},
 };
 
@@ -243,7 +263,7 @@ static struct cpsw_platform_data cpsw_data = {
 	.mdio_div		= 0xff,
 	.channels		= 8,
 	.cpdma_reg_ofs		= 0x800,
-	.slaves			= 1,
+	.slaves			= 6,
 	.slave_data		= cpsw_slaves,
 	.ale_reg_ofs		= 0xd00,
 	.ale_entries		= 1024,
@@ -316,7 +336,7 @@ int board_eth_init(bd_t *bis)
 	if (board_is_myd_c437x_idk()) {
 		writel(RGMII_MODE_ENABLE, &cdev->miisel);
 		cpsw_slaves[0].phy_if = PHY_INTERFACE_MODE_RGMII;
-		cpsw_slaves[0].phy_addr = 0;
+//		cpsw_slaves[0].phy_addr = 4;
 	}
 
 	rv = cpsw_register(&cpsw_data);
