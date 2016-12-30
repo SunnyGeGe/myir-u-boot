@@ -286,7 +286,7 @@
 	DEFAULT_LINUX_BOOT_ENV \
 	DEFAULT_MMC_TI_ARGS \
 	"fdtfile=undefined\0" \
-	"mmcdev=1\0" \
+	"mmcdev=0\0" \
 	"bootpart=0:2\0" \
 	"bootdir=/boot\0" \
 	"bootfile=zImage\0" \
