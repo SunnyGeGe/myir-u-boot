@@ -53,7 +53,7 @@
 #define NANDARGS \
 	"updatesys=nand erase.chip;mmc dev 0; mmc rescan; " \
 		"fatload mmc 0 0x82000000 MLO; 				nand write 0x82000000 0 ${filesize};" \
-		"fatload mmc 0 0x82000000 myd_y335x.dtb; 	nand write 0x82000000 0x80000 ${filesize};" \
+		"fatload mmc 0 0x82000000 myd_j335x.dtb; 	nand write 0x82000000 0x80000 ${filesize};" \
 		"fatload mmc 0 0x82000000 u-boot.img; 		nand write 0x82000000 0xc0000 ${filesize};" \
 		"fatload mmc 0 0x82000000 zImage; 			nand write 0x82000000 0x200000 ${filesize};" \
 		"fatload mmc 0 0x82000000 rootfs.ubi; 		nand write 0x82000000 0xa00000 ${filesize};" \
