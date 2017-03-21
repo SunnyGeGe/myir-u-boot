@@ -227,3 +227,14 @@ int board_eth_init(bd_t *bis)
 	return n;
 }
 #endif /* CONFIG_DRIVER_TI_CPSW && !CONFIG_SPL_BUILD */
+
+#ifdef CONFIG_SPL_LOAD_FIT
+int board_fit_config_name_match(const char *name)
+{
+	if (!strcmp(name, "myd_y335x"))
+		return 0;
+	else
+		return -1;
+}
+#endif
+

@@ -39,6 +39,10 @@
 /* GPIO pin + bank to pin ID mapping */
 #define GPIO_PIN(_bank, _pin)		((_bank << 5) + _pin)
 
+/* Custom script for NOR */
+#define CONFIG_SYS_LDSCRIPT		"board/myirtech/myd_y335x/u-boot.lds"
+
+
 /* Always 128 KiB env size */
 #define CONFIG_ENV_SIZE			(128 << 10)
 
@@ -304,7 +308,44 @@
 #define CONFIG_SYS_TEXT_BASE		0x08000000
 #endif
 
+/*
+ * USB configuration.  We enable MUSB support, both for host and for
+ * gadget.  We set USB0 as peripheral and USB1 as host, based on the
+ * board schematic and physical port wired to each.  Then for host we
+ * add mass storage support and for gadget we add both RNDIS ethernet
+ * and DFU.
+ */
+#define CONFIG_USB_MUSB_DSPS
+#define CONFIG_ARCH_MISC_INIT
+#define CONFIG_USB_MUSB_PIO_ONLY
+#define CONFIG_USB_MUSB_DISABLE_BULK_COMBINE_SPLIT
+#define CONFIG_AM335X_USB0
+#define CONFIG_AM335X_USB0_MODE	MUSB_PERIPHERAL
+#define CONFIG_AM335X_USB1
+#define CONFIG_AM335X_USB1_MODE MUSB_HOST
 
+#ifndef CONFIG_SPL_USBETH_SUPPORT
+/* Fastboot */
+#define CONFIG_USB_FUNCTION_FASTBOOT
+#define CONFIG_CMD_FASTBOOT
+#define CONFIG_ANDROID_BOOT_IMAGE
+#define CONFIG_FASTBOOT_BUF_ADDR	CONFIG_SYS_LOAD_ADDR
+#define CONFIG_FASTBOOT_BUF_SIZE	0x07000000
+
+/* To support eMMC booting */
+#define CONFIG_STORAGE_EMMC
+#define CONFIG_FASTBOOT_FLASH_MMC_DEV   1
+#endif
+
+#ifdef CONFIG_USB_MUSB_HOST
+#define CONFIG_USB_STORAGE
+#endif
+
+#ifdef CONFIG_USB_MUSB_GADGET
+#define CONFIG_USB_ETHER
+#define CONFIG_USB_ETH_RNDIS
+#define CONFIG_USBNET_HOST_ADDR	"de:ad:be:af:00:00"
+#endif /* CONFIG_USB_MUSB_GADGET */
 
 /*
  * Disable MMC DM for SPL build and can be re-enabled after adding
