@@ -127,11 +127,29 @@
 
 #define CONFIG_BOOTCOMMAND \
 	"run findfdt; " \
-	"run init_console; " \
-	"run envboot; " \
-	"run distro_bootcmd"
+	"run envboot;" \
+	"mmc dev 0;" \
+	"if mmc rescan; then " \
+		"setenv mmcdev 0;" \
+		"setenv devtype mmc" \
+		"setenv devnum 0;" \
+		"setenv bootpart 0:2; " \
+		"run findfdt; " \
+		"run mmcboot;" \
+	"fi; " \
+	"mmc dev 1; " \
+	"if mmc rescan; then " \
+		"setenv mmcdev 1;" \
+		"setenv devtype mmc;" \
+		"setenv devnum 1;" \
+		"setenv bootpart 1:2; " \
+		"run findfdt; " \
+		"run mmcboot;" \
+	"fi; " \
+	"usb dev 0;" \
+	"run usbboot;" \
+ 	"run nandboot; "
 
-#include <config_distro_bootcmd.h>
 
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -147,6 +165,9 @@
 		"uuid_disk=${uuid_gpt_disk};" \
 		"name=rootfs,start=2MiB,size=-,uuid=${uuid_gpt_rootfs}\0" \
 	"optargs=\0" \
+	"usbroot=/dev/sda2 rw\0" \
+	"usbrootfstype=ext4 rootwait\0" \
+	"usbdev=0\0" \
 	"ramroot=/dev/ram0 rw\0" \
 	"ramrootfstype=ext2\0" \
 	"spiroot=/dev/mtdblock4 rw\0" \
@@ -158,13 +179,20 @@
 		"${optargs} " \
 		"root=${spiroot} " \
 		"rootfstype=${spirootfstype}\0" \
+	"usbargs=setenv bootargs console=${console} " \
+		"${optargs} " \
+		"root=${usbroot} " \
+		"rootfstype=${usbrootfstype}\0" \
 	"ramargs=setenv bootargs console=${console} " \
 		"${optargs} " \
 		"root=${ramroot} " \
 		"rootfstype=${ramrootfstype}\0" \
-	"loadramdisk=load mmc ${mmcdev} ${rdaddr} ramdisk.gz\0" \
-	"loadimage=load mmc ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadramdisk=load ${devtype} ${devnum} ${rdaddr} ramdisk.gz\0" \
+	"loadimage=load ${devtype} ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
+	"loadfdt=load ${devtype} ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadbootenv=load ${devtype} ${devnum} ${loadaddr} ${bootenvfile}\0" \
+	"importbootenv=echo Importing environment from ${devtype} ...; " \
+		"env import -t ${loadaddr} ${filesize}\0" \
 	"mmcloados=run args_mmc; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
@@ -180,6 +208,8 @@
 			"bootz; " \
 		"fi;\0" \
 	"mmcboot=mmc dev ${mmcdev}; " \
+		"setenv devnum ${mmcdev}; " \
+		"setenv devtype mmc; " \
 		"if mmc rescan; then " \
 			"echo SD/MMC found on device ${mmcdev};" \
 			"run envboot; " \
@@ -195,6 +225,28 @@
 	"ramboot=echo Booting from ramdisk ...; " \
 		"run ramargs; " \
 		"bootz ${loadaddr} ${rdaddr} ${fdtaddr}\0" \
+	"usbboot=" \
+		"setenv devnum ${usbdev}; " \
+		"setenv devtype usb; " \
+		"usb start ${usbdev}; " \
+		"if usb dev ${usbdev}; then " \
+			"if run loadbootenv; then " \
+				"echo Loaded environment from ${bootenvfile};" \
+				"run importbootenv;" \
+			"fi;" \
+			"if test -n $uenvcmd; then " \
+				"echo Running uenvcmd ...;" \
+				"run uenvcmd;" \
+			"fi;" \
+			"if run loadimage; then " \
+				"run loadfdt; " \
+				"echo Booting from usb ${usbdev}...; " \
+				"run usbargs;" \
+				"bootz ${loadaddr} - ${fdtaddr}; " \
+			"fi;" \
+		"fi\0" \
+		"fi;" \
+		"usb stop ${usbdev};\0" \
 	"findfdt="\
 		"if test $board_name = A335BONE; then " \
 			"setenv fdtfile am335x-bone.dtb; fi; " \
@@ -220,7 +272,7 @@
 		"fi;\0" \
 	NANDARGS \
 	NETARGS \
-	BOOTENV
+
 #endif
 
 /* NS16550 Configuration */
