@@ -39,10 +39,6 @@
 /* GPIO pin + bank to pin ID mapping */
 #define GPIO_PIN(_bank, _pin)		((_bank << 5) + _pin)
 
-/* Custom script for NOR */
-#define CONFIG_SYS_LDSCRIPT		"board/myirtech/myd_y335x/u-boot.lds"
-
-
 /* Always 128 KiB env size */
 #define CONFIG_ENV_SIZE			(128 << 10)
 
