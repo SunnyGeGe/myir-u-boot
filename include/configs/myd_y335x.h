@@ -51,12 +51,35 @@
 
 #ifdef CONFIG_NAND
 #define NANDARGS \
-	"updatesys=nand erase.chip;mmc dev 0; mmc rescan; " \
-		"fatload mmc 0 0x82000000 MLO; 				nand write 0x82000000 0 ${filesize};" \
-		"fatload mmc 0 0x82000000 myd_y335x.dtb; 	nand write 0x82000000 0x80000 ${filesize};" \
-		"fatload mmc 0 0x82000000 u-boot.img; 		nand write 0x82000000 0xc0000 ${filesize};" \
-		"fatload mmc 0 0x82000000 zImage; 			nand write 0x82000000 0x200000 ${filesize};" \
-		"fatload mmc 0 0x82000000 rootfs.ubi; 		nand write 0x82000000 0xa00000 ${filesize};" \
+	"updatesys=nand erase.chip;" \
+		"mmc dev 0;" \
+		"if mmc rescan; then " \
+			"setenv mmcdev 0; " \
+			"setenv devtype mmc; " \
+			"setenv devnum 0; " \
+		"fi; " \
+		"usb start ${usbdev}; " \
+		"if usb dev ${usbdev}; then " \
+			"setenv devtype usb;" \
+			"setenv devnum 0;" \
+		"fi; "\
+		"if run loadbootenv; then " \
+			"echo Loaded environment from ${bootenvfile};" \
+			"run importbootenv;" \
+		"fi;" \
+		"if test -n $updatecmd; then " \
+			"echo Running updatecmd ...;" \
+			"run updatecmd;" \
+		"else " \
+			"fatload ${devtype} 0 ${loadaddr} MLO; 				nand write ${loadaddr} 0 ${filesize};" \
+			"fatload ${devtype} 0 ${loadaddr} myd_y335x.dtb; 	nand write ${loadaddr} 0x80000 ${filesize};" \
+			"fatload ${devtype} 0 ${loadaddr} u-boot.img; 		nand write ${loadaddr} 0xc0000 ${filesize};" \
+			"fatload ${devtype} 0 ${loadaddr} zImage; 			nand write ${loadaddr} 0x200000 ${filesize};" \
+			"fatload ${devtype} 0 ${loadaddr} rootfs.ubi; 		nand write ${loadaddr} 0xa00000 ${filesize};" \
+		"fi; " \
+		"if usb dev ${usbdev}; then " \
+			"usb stop ${usbdev};\0" \
+		"fi; " \
 	"mtdids=" MTDIDS_DEFAULT "\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"nandargs=setenv bootargs console=${console} " \
@@ -131,7 +154,7 @@
 	"mmc dev 0;" \
 	"if mmc rescan; then " \
 		"setenv mmcdev 0;" \
-		"setenv devtype mmc" \
+		"setenv devtype mmc; " \
 		"setenv devnum 0;" \
 		"setenv bootpart 0:2; " \
 		"run findfdt; " \
