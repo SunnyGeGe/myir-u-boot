@@ -51,8 +51,7 @@
 
 #ifdef CONFIG_NAND
 #define NANDARGS \
-	"updatesys=nand erase.chip;" \
-		"mmc dev 0;" \
+	"updatesys=mmc dev 0;" \
 		"if mmc rescan; then " \
 			"setenv mmcdev 0; " \
 			"setenv devtype mmc; " \
@@ -66,20 +65,37 @@
 		"if run loadbootenv; then " \
 			"echo Loaded environment from ${bootenvfile};" \
 			"run importbootenv;" \
-		"fi;" \
+		"fi; " \
 		"if test -n $updatecmd; then " \
 			"echo Running updatecmd ...;" \
 			"run updatecmd;" \
 		"else " \
-			"fatload ${devtype} 0 ${loadaddr} MLO; 				nand write ${loadaddr} 0 ${filesize};" \
-			"fatload ${devtype} 0 ${loadaddr} myd_y335x.dtb; 	nand write ${loadaddr} 0x80000 ${filesize};" \
-			"fatload ${devtype} 0 ${loadaddr} u-boot.img; 		nand write ${loadaddr} 0xc0000 ${filesize};" \
-			"fatload ${devtype} 0 ${loadaddr} zImage; 			nand write ${loadaddr} 0x200000 ${filesize};" \
-			"fatload ${devtype} 0 ${loadaddr} rootfs.ubi; 		nand write ${loadaddr} 0xa00000 ${filesize};" \
+			"if run loaduboot; then " \
+				"nand erase.part NAND.SPL; " \
+				"nand erase.part NAND.u-boot;" \
+				"nand erase.part NAND.u-boot-env;" \
+				"nand erase.part NAND.u-boot-env.backup1;" \
+				"fatload ${devtype} 0 ${loadaddr} MLO; 				nand write ${loadaddr} 0 ${filesize};" \
+				"fatload ${devtype} 0 ${loadaddr} u-boot.img; 		nand write ${loadaddr} 0xc0000 ${filesize};" \
+			"fi; " \
+			"if run loadfdt; then " \
+				"nand erase.part NAND.u-boot-spl-os;" \
+				"nand write ${fdtaddr} 0x80000 ${filesize};" \
+			"fi; " \
+			"if run loadimage; then " \
+				"nand erase.part NAND.kernel;" \
+				"nand write ${loadaddr} 0x200000 ${filesize};" \
+			"fi; " \
+			"if run loadrootfs; then " \
+				"nand erase.part NAND.rootfs;" \
+				"nand write ${loadaddr} 0xa00000 ${filesize};" \
+			"fi; " \
 		"fi; " \
 		"if usb dev ${usbdev}; then " \
-			"usb stop ${usbdev};\0" \
-		"fi; " \
+			"usb stop ${usbdev};" \
+		"fi; \0" \
+	"loaduboot=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/MLO;load ${devtype} ${devnum} ${loadaddr} ${bootdir}/u-boot.img\0" \
+	"loadrootfs=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/rootfs.ubi\0" \
 	"mtdids=" MTDIDS_DEFAULT "\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"nandargs=setenv bootargs console=${console} " \
