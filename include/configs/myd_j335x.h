@@ -51,12 +51,51 @@
 
 #ifdef CONFIG_NAND
 #define NANDARGS \
-	"updatesys=nand erase.chip;mmc dev 0; mmc rescan; " \
-		"fatload mmc 0 0x82000000 MLO; 				nand write 0x82000000 0 ${filesize};" \
-		"fatload mmc 0 0x82000000 myd_j335x.dtb; 	nand write 0x82000000 0x80000 ${filesize};" \
-		"fatload mmc 0 0x82000000 u-boot.img; 		nand write 0x82000000 0xc0000 ${filesize};" \
-		"fatload mmc 0 0x82000000 zImage; 			nand write 0x82000000 0x200000 ${filesize};" \
-		"fatload mmc 0 0x82000000 rootfs.ubi; 		nand write 0x82000000 0xa00000 ${filesize};" \
+	"updatesys=mmc dev 0;" \
+		"if mmc rescan; then " \
+			"setenv mmcdev 0; " \
+			"setenv devtype mmc; " \
+			"setenv devnum 0; " \
+		"fi; " \
+		"usb start ${usbdev}; " \
+		"if usb dev ${usbdev}; then " \
+			"setenv devtype usb;" \
+			"setenv devnum 0;" \
+		"fi; "\
+		"if run loadbootenv; then " \
+			"echo Loaded environment from ${bootenvfile};" \
+			"run importbootenv;" \
+		"fi; " \
+		"if test -n $updatecmd; then " \
+			"echo Running updatecmd ...;" \
+			"run updatecmd;" \
+		"else " \
+			"if run loaduboot; then " \
+				"nand erase.part NAND.SPL; " \
+				"nand erase.part NAND.u-boot;" \
+				"nand erase.part NAND.u-boot-env;" \
+				"nand erase.part NAND.u-boot-env.backup1;" \
+				"fatload ${devtype} 0 ${loadaddr} MLO; 				nand write ${loadaddr} 0 ${filesize};" \
+				"fatload ${devtype} 0 ${loadaddr} u-boot.img; 		nand write ${loadaddr} 0xc0000 ${filesize};" \
+			"fi; " \
+			"if run loadfdt; then " \
+				"nand erase.part NAND.u-boot-spl-os;" \
+				"nand write ${fdtaddr} 0x80000 ${filesize};" \
+			"fi; " \
+			"if run loadimage; then " \
+				"nand erase.part NAND.kernel;" \
+				"nand write ${loadaddr} 0x200000 ${filesize};" \
+			"fi; " \
+			"if run loadrootfs; then " \
+				"nand erase.part NAND.rootfs;" \
+				"nand write ${loadaddr} 0xa00000 ${filesize};" \
+			"fi; " \
+		"fi; " \
+		"if usb dev ${usbdev}; then " \
+			"usb stop ${usbdev};" \
+		"fi; \0" \
+	"loaduboot=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/MLO;load ${devtype} ${devnum} ${loadaddr} ${bootdir}/u-boot.img\0" \
+	"loadrootfs=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/rootfs.ubi\0" \
 	"mtdids=" MTDIDS_DEFAULT "\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"nandargs=setenv bootargs console=${console} " \
@@ -127,11 +166,29 @@
 
 #define CONFIG_BOOTCOMMAND \
 	"run findfdt; " \
-	"run init_console; " \
-	"run envboot; " \
-	"run distro_bootcmd"
+	"run envboot;" \
+	"usb dev 0;" \
+	"run usbboot;" \
+	"mmc dev 0;" \
+	"if mmc rescan; then " \
+		"setenv mmcdev 0;" \
+		"setenv devtype mmc; " \
+		"setenv devnum 0;" \
+		"setenv bootpart 0:2; " \
+		"run findfdt; " \
+		"run mmcboot;" \
+	"fi; " \
+	"mmc dev 1; " \
+	"if mmc rescan; then " \
+		"setenv mmcdev 1;" \
+		"setenv devtype mmc;" \
+		"setenv devnum 1;" \
+		"setenv bootpart 1:2; " \
+		"run findfdt; " \
+		"run mmcboot;" \
+	"fi; " \
+ 	"run nandboot; "
 
-#include <config_distro_bootcmd.h>
 
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -147,6 +204,9 @@
 		"uuid_disk=${uuid_gpt_disk};" \
 		"name=rootfs,start=2MiB,size=-,uuid=${uuid_gpt_rootfs}\0" \
 	"optargs=\0" \
+	"usbroot=/dev/sda2 rw\0" \
+	"usbrootfstype=ext4 rootwait\0" \
+	"usbdev=0\0" \
 	"ramroot=/dev/ram0 rw\0" \
 	"ramrootfstype=ext2\0" \
 	"spiroot=/dev/mtdblock4 rw\0" \
@@ -158,13 +218,20 @@
 		"${optargs} " \
 		"root=${spiroot} " \
 		"rootfstype=${spirootfstype}\0" \
+	"usbargs=setenv bootargs console=${console} " \
+		"${optargs} " \
+		"root=${usbroot} " \
+		"rootfstype=${usbrootfstype}\0" \
 	"ramargs=setenv bootargs console=${console} " \
 		"${optargs} " \
 		"root=${ramroot} " \
 		"rootfstype=${ramrootfstype}\0" \
-	"loadramdisk=load mmc ${mmcdev} ${rdaddr} ramdisk.gz\0" \
-	"loadimage=load mmc ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadramdisk=load ${devtype} ${devnum} ${rdaddr} ramdisk.gz\0" \
+	"loadimage=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/${bootfile}\0" \
+	"loadfdt=load ${devtype} ${devnum} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadbootenv=load ${devtype} ${devnum} ${loadaddr} ${bootenvfile}\0" \
+	"importbootenv=echo Importing environment from ${devtype} ...; " \
+		"env import -t ${loadaddr} ${filesize}\0" \
 	"mmcloados=run args_mmc; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
@@ -180,6 +247,8 @@
 			"bootz; " \
 		"fi;\0" \
 	"mmcboot=mmc dev ${mmcdev}; " \
+		"setenv devnum ${mmcdev}; " \
+		"setenv devtype mmc; " \
 		"if mmc rescan; then " \
 			"echo SD/MMC found on device ${mmcdev};" \
 			"run envboot; " \
@@ -195,6 +264,28 @@
 	"ramboot=echo Booting from ramdisk ...; " \
 		"run ramargs; " \
 		"bootz ${loadaddr} ${rdaddr} ${fdtaddr}\0" \
+	"usbboot=" \
+		"setenv devnum ${usbdev}; " \
+		"setenv devtype usb; " \
+		"usb start ${usbdev}; " \
+		"if usb dev ${usbdev}; then " \
+			"if run loadbootenv; then " \
+				"echo Loaded environment from ${bootenvfile};" \
+				"run importbootenv;" \
+			"fi;" \
+			"if test -n $uenvcmd; then " \
+				"echo Running uenvcmd ...;" \
+				"run uenvcmd;" \
+			"fi;" \
+			"if run loadimage; then " \
+				"run loadfdt; " \
+				"echo Booting from usb ${usbdev}...; " \
+				"run usbargs;" \
+				"bootz ${loadaddr} - ${fdtaddr}; " \
+			"fi;" \
+		"fi\0" \
+		"fi;" \
+		"usb stop ${usbdev};\0" \
 	"findfdt="\
 		"if test $board_name = A335BONE; then " \
 			"setenv fdtfile am335x-bone.dtb; fi; " \
@@ -220,7 +311,7 @@
 		"fi;\0" \
 	NANDARGS \
 	NETARGS \
-	BOOTENV
+
 #endif
 
 /* NS16550 Configuration */
@@ -304,7 +395,44 @@
 #define CONFIG_SYS_TEXT_BASE		0x08000000
 #endif
 
+/*
+ * USB configuration.  We enable MUSB support, both for host and for
+ * gadget.  We set USB0 as peripheral and USB1 as host, based on the
+ * board schematic and physical port wired to each.  Then for host we
+ * add mass storage support and for gadget we add both RNDIS ethernet
+ * and DFU.
+ */
+#define CONFIG_USB_MUSB_DSPS
+#define CONFIG_ARCH_MISC_INIT
+#define CONFIG_USB_MUSB_PIO_ONLY
+#define CONFIG_USB_MUSB_DISABLE_BULK_COMBINE_SPLIT
+#define CONFIG_AM335X_USB0
+#define CONFIG_AM335X_USB0_MODE	MUSB_PERIPHERAL
+#define CONFIG_AM335X_USB1
+#define CONFIG_AM335X_USB1_MODE MUSB_HOST
 
+#ifndef CONFIG_SPL_USBETH_SUPPORT
+/* Fastboot */
+#define CONFIG_USB_FUNCTION_FASTBOOT
+#define CONFIG_CMD_FASTBOOT
+#define CONFIG_ANDROID_BOOT_IMAGE
+#define CONFIG_FASTBOOT_BUF_ADDR	CONFIG_SYS_LOAD_ADDR
+#define CONFIG_FASTBOOT_BUF_SIZE	0x07000000
+
+/* To support eMMC booting */
+#define CONFIG_STORAGE_EMMC
+#define CONFIG_FASTBOOT_FLASH_MMC_DEV   1
+#endif
+
+#ifdef CONFIG_USB_MUSB_HOST
+#define CONFIG_USB_STORAGE
+#endif
+
+#ifdef CONFIG_USB_MUSB_GADGET
+#define CONFIG_USB_ETHER
+#define CONFIG_USB_ETH_RNDIS
+#define CONFIG_USBNET_HOST_ADDR	"de:ad:be:af:00:00"
+#endif /* CONFIG_USB_MUSB_GADGET */
 
 /*
  * Disable MMC DM for SPL build and can be re-enabled after adding

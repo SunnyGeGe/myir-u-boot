@@ -227,3 +227,27 @@ int board_eth_init(bd_t *bis)
 	return n;
 }
 #endif /* CONFIG_DRIVER_TI_CPSW && !CONFIG_SPL_BUILD */
+
+#ifdef CONFIG_SPL_LOAD_FIT
+int board_fit_config_name_match(const char *name)
+{
+	if (!strcmp(name, "myd_j335x"))
+		return 0;
+	else
+		return -1;
+}
+#endif
+
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+
+static const char cpsw_eth0_alias[] = "/ocp/ethernet@4a100000/slave@4a100200";
+static const char cpsw_eth1_alias[] = "/ocp/ethernet@4a100000/slave@4a100300";
+
+int ft_board_setup(void *fdt, bd_t *bd)
+{
+
+	printf("Fixing up ETH0 & ETH1 to CPSW Ethernet\n");
+	return 0;
+
+}
+#endif
