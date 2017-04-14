@@ -84,6 +84,7 @@ static struct module_pin_mux rgmii1_pin_mux[] = {
 
 
 #ifdef CONFIG_NAND
+#pragma message("NAND is activated!")
 static struct module_pin_mux nand_pin_mux[] = {
 	{OFFSET(gpmc_ad0),	(MODE(0) | PULLUDDIS | RXACTIVE)}, /* AD0  */
 	{OFFSET(gpmc_ad1),	(MODE(0) | PULLUDDIS | RXACTIVE)}, /* AD1  */
@@ -114,6 +115,22 @@ static struct module_pin_mux nand_pin_mux[] = {
 };
 #endif
 
+static struct module_pin_mux emmc_pin_mux[] = {
+	{OFFSET(gpmc_csn1), (MODE(2) | PULLUDDIS | RXACTIVE)}, /* EMMC_CLK */
+	{OFFSET(gpmc_csn2), (MODE(2) | PULLUP_EN | RXACTIVE)}, /* EMMC_CMD */
+	{OFFSET(gpmc_ad0),  (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT0 */
+	{OFFSET(gpmc_ad1),  (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT1 */
+	{OFFSET(gpmc_ad2), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT2 */
+	{OFFSET(gpmc_ad3), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT3 */
+	{OFFSET(gpmc_ad4), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT4 */
+	{OFFSET(gpmc_ad5), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT5 */
+	{OFFSET(gpmc_ad6), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT6 */
+	{OFFSET(gpmc_ad7), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT7 */
+	{-1},
+};
+
+
+
 static struct module_pin_mux status_led_pin_mux[] = {
 	{OFFSET(mcasp0_aclkr), (MODE(7) | PULLUDEN)},	/* GPIO3_18 */
 	{-1},
@@ -135,7 +152,12 @@ void set_mux_conf_regs(void)
 	configure_module_pin_mux(i2c1_pin_mux);
 	configure_module_pin_mux(rgmii1_pin_mux);
 	configure_module_pin_mux(mmc0_pin_mux);
+#if defined(CONFIG_NAND)
+	
 	configure_module_pin_mux(nand_pin_mux);
+#else
+	configure_module_pin_mux(emmc_pin_mux);
+#endif
 	configure_module_pin_mux(status_led_pin_mux);
 	configure_module_pin_mux(myd_wdt_pin_mux);
 }

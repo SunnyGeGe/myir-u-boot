@@ -9,9 +9,12 @@ There are several  types of development boards, each has a different configurati
 
 Board Name 	| Configuration  	| Details  
 -----------|--------------|---------   
-MYD-AM335X 	| myd_c335x_defconfig 	| http://www.myirtech.com/list.asp?id=466  
-MYD-AM335X-Y 	| myd_y335x_defconfig 	| http://www.myirtech.com/list.asp?id=492  
-MYD-AM335X-J 	| myd_j335x_defconfig 	| http://www.myirtech.com/list.asp?id=493  
+MYD-AM335X(NAND) 	| myd_c335x_defconfig 	| http://www.myirtech.com/list.asp?id=466  
+MYD-AM335X(EMMC) 	| myd_c335x_emmc_defconfig 	| http://www.myirtech.com/list.asp?id=466  
+MYD-AM335X-Y(NAND) 	| myd_y335x_defconfig 	| http://www.myirtech.com/list.asp?id=492  
+MYD-AM335X-Y(EMMC) 	| myd_y335x_emmc_defconfig 	| http://www.myirtech.com/list.asp?id=492  
+MYD-AM335X-J(NAND) 	| myd_j335x_defconfig 	| http://www.myirtech.com/list.asp?id=493  
+MYD-AM335X-J(EMMC) 	| myd_j335x_emmc_defconfig 	| http://www.myirtech.com/list.asp?id=493  
 
 ## How to build it  
 
