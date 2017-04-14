@@ -167,6 +167,8 @@
 #define CONFIG_BOOTCOMMAND \
 	"run findfdt; " \
 	"run envboot;" \
+	"usb dev 0;" \
+	"run usbboot;" \
 	"mmc dev 0;" \
 	"if mmc rescan; then " \
 		"setenv mmcdev 0;" \
@@ -185,8 +187,6 @@
 		"run findfdt; " \
 		"run mmcboot;" \
 	"fi; " \
-	"usb dev 0;" \
-	"run usbboot;" \
  	"run nandboot; "
 
 
@@ -227,8 +227,8 @@
 		"root=${ramroot} " \
 		"rootfstype=${ramrootfstype}\0" \
 	"loadramdisk=load ${devtype} ${devnum} ${rdaddr} ramdisk.gz\0" \
-	"loadimage=load ${devtype} ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"loadfdt=load ${devtype} ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadimage=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/${bootfile}\0" \
+	"loadfdt=load ${devtype} ${devnum} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
 	"loadbootenv=load ${devtype} ${devnum} ${loadaddr} ${bootenvfile}\0" \
 	"importbootenv=echo Importing environment from ${devtype} ...; " \
 		"env import -t ${loadaddr} ${filesize}\0" \
