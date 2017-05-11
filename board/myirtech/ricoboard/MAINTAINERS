@@ -1,0 +1,6 @@
+MYIRTECH RICOBOARD
+M:	Sunny.Guo <sunny.guo@myirtech.com>
+S:	Maintained
+F:	board/myirtech/ricoboard/
+F:	include/configs/ricoboard.h
+F:	configs/ricoboard_defconfig

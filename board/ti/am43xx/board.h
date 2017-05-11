@@ -19,27 +19,31 @@
 
 static inline int board_is_eposevm(void)
 {
-	return board_ti_is("AM43EPOS");
+	return false;
+	//return board_ti_is("AM43EPOS");
 }
 
 static inline int board_is_gpevm(void)
 {
-	return board_ti_is("AM43__GP");
+	return true; //board_ti_is("AM43__GP");
 }
 
 static inline int board_is_sk(void)
 {
-	return board_ti_is("AM43__SK");
+	return false;
+	//return board_ti_is("AM43__SK");
 }
 
 static inline int board_is_idk(void)
 {
-	return board_ti_is("AM43_IDK");
+	return false;
+	//return board_ti_is("AM43_IDK");
 }
 
 static inline int board_is_hsevm(void)
 {
-	return board_ti_is("AM43XXHS");
+	return false;
+	//return board_ti_is("AM43XXHS");
 }
 
 static inline int board_is_evm(void)

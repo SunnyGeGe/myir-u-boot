@@ -10,6 +10,17 @@ config TARGET_AM43XX_EVM
 	  to write software and develop hardware around
 	  an AM43xx processor subsystem.
 
+config TARGET_RICOBOARD
+	bool "Support am43xx ricoboard"
+	select MYIR_I2C_BOARD_DETECT
+	help
+	  This option specifies support for the AM43xx
+	  GP and HS EVM development platforms.The AM437x
+	  GP EVM is a standalone test, development, and
+	  evaluation module system that enables developers
+	  to write software and develop hardware around
+	  an AM43xx processor subsystem.
+
 config ISW_ENTRY_ADDR
 	hex "Address in memory or XIP flash of bootloader entry point"
 	help

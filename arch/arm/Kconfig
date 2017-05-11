@@ -916,6 +916,7 @@ source "board/myirtech/myd_c335x/Kconfig"
 source "board/myirtech/myd_j335x/Kconfig"
 source "board/myirtech/myd_y335x/Kconfig"
 source "board/myirtech/myd_c437x/Kconfig"
+source "board/myirtech/ricoboard/Kconfig"
 
 source "arch/arm/Kconfig.debug"
 
