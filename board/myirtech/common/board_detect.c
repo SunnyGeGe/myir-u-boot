@@ -323,8 +323,11 @@ void __maybe_unused set_board_info_env(char *name)
 	char *unknown = "unknown";
 	struct ti_common_eeprom *ep = TI_EEPROM_DATA;
 
-	if (name)
+	if (name){
 		setenv("board_name", name);
+		setenv("board_rev", "A");
+		setenv("board_serial", "0123456789ABCDEF");
+	}
 	else if (ep->name)
 		setenv("board_name", ep->name);
 	else

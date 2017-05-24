@@ -356,8 +356,8 @@
 			"setenv fdtfile am437x-sk-evm.dtb; fi; " \
 		"if test $board_name = AM43_IDK; then " \
 			"setenv fdtfile am437x-idk-evm.dtb; fi; " \
-		"if test $board_name = myd_c437x; then " \
-			"setenv fdtfile myd_c437x.dtb; fi; " \
+		"if test $board_name = myd_c437x_evm; then " \
+			"setenv fdtfile myd_c437x_evm.dtb; fi; " \
 		"if test $board_name = myd_c437x_idk; then " \
 			"setenv fdtfile myd_c437x_idk.dtb; fi; " \
 		"if test $fdtfile = undefined; then " \
@@ -384,7 +384,7 @@
 		"setenv devtype mmc;" \
 		"setenv devnum 1;" \
 		"setenv bootpart 1:2; " \
-		"run findfdt; " \
+		"run envboot; " \
 		"run mmcboot;" \
 	"fi; " \
 	"run usbboot;" \
