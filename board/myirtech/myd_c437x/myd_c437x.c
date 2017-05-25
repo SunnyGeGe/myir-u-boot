@@ -230,21 +230,21 @@ static struct cpsw_slave_data cpsw_slaves[] = {
 		.sliver_reg_ofs	= 0xd80,
 		.phy_addr	= 0,
 	},
-	{
-		.slave_reg_ofs	= 0x208,
-		.sliver_reg_ofs	= 0xd80,
-		.phy_addr	= 1,
-	},
+//	{
+//		.slave_reg_ofs	= 0x208,
+//		.sliver_reg_ofs	= 0xd80,
+//		.phy_addr	= 1,
+//	},
 	{
 		.slave_reg_ofs	= 0x208,
 		.sliver_reg_ofs	= 0xd80,
 		.phy_addr	= 4,
 	},
-	{
-		.slave_reg_ofs	= 0x308,
-		.sliver_reg_ofs	= 0xdc0,
-		.phy_addr	= 1,
-	},
+//	{
+//		.slave_reg_ofs	= 0x308,
+//		.sliver_reg_ofs	= 0xdc0,
+//		.phy_addr	= 1,
+//	},
 	{
 		.slave_reg_ofs	= 0x308,
 		.sliver_reg_ofs = 0xdc0,
@@ -263,7 +263,7 @@ static struct cpsw_platform_data cpsw_data = {
 	.mdio_div		= 0xff,
 	.channels		= 8,
 	.cpdma_reg_ofs		= 0x800,
-	.slaves			= 6,
+	.slaves			= 4,
 	.slave_data		= cpsw_slaves,
 	.ale_reg_ofs		= 0xd00,
 	.ale_entries		= 1024,
