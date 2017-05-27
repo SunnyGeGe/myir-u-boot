@@ -306,18 +306,33 @@
 		"root=${ramroot} " \
 		"rootfstype=${ramrootfstype}\0" \
 	"loadramdisk=load ${devtype} ${devnum} ${rdaddr} ramdisk.gz\0" \
-	"loadimage=load ${devtype} ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"loadfdt=load ${devtype} ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadimage=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/${bootfile}\0" \
+	"loadfdt=load ${devtype} ${devnum} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadbootenv=load ${devtype} ${devnum} ${loadaddr} ${bootenvfile}\0" \
+	"importbootenv=echo Importing environment from ${devtype} ...; " \
+		"env import -t ${loadaddr} ${filesize}\0" \
+	"mmcloados=run args_mmc; " \
+		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+			"if run loadfdt; then " \
+				"bootz ${loadaddr} - ${fdtaddr}; " \
+			"else " \
+				"if test ${boot_fdt} = try; then " \
+					"bootz; " \
+				"else " \
+					"echo WARN: Cannot load the DT; " \
+				"fi; " \
+			"fi; " \
+		"else " \
+			"bootz; " \
+		"fi;\0" \
 	"mmcboot=mmc dev ${mmcdev}; " \
 		"setenv devnum ${mmcdev}; " \
 		"setenv devtype mmc; " \
 		"if mmc rescan; then " \
-			"echo SD/MMC found on device ${devnum};" \
+			"echo SD/MMC found on device ${mmcdev};" \
+			"run envboot; " \
 			"if run loadimage; then " \
-				"run loadfdt; " \
-				"echo Booting from mmc${mmcdev} ...; " \
-				"run args_mmc; " \
-				"bootz ${loadaddr} - ${fdtaddr}; " \
+				"run mmcloados;" \
 			"fi;" \
 		"fi;\0" \
 	"usbboot=" \
@@ -326,7 +341,7 @@
 		"usb start ${usbdev}; " \
 		"if usb dev ${usbdev}; then " \
 			"if run loadbootenv; then " \
-				"echo Loaded environment from ${bootenv};" \
+				"echo Loaded environment from ${bootenvfile};" \
 				"run importbootenv;" \
 			"fi;" \
 			"if test -n $uenvcmd; then " \
@@ -353,12 +368,12 @@
 			"setenv fdtfile am437x-sk-evm.dtb; fi; " \
 		"if test $board_name = AM43_IDK; then " \
 			"setenv fdtfile am437x-idk-evm.dtb; fi; " \
-		"if test $board_name = myd_c437x; then " \
-			"setenv fdtfile myd_c437x.dtb; fi; " \
+		"if test $board_name = myd_c437x_evm; then " \
+			"setenv fdtfile myd_c437x_evm.dtb; fi; " \
 		"if test $board_name = myd_c437x_idk; then " \
 			"setenv fdtfile myd_c437x_idk.dtb; fi; " \
 		"if test $board_name = ricoboard; then " \
-			"setenv fdtfile ricoboard.dtb; fi; " \
+			"setenv fdtfile myir_ricoboard.dtb; fi; " \
 		"if test $fdtfile = undefined; then " \
 			"echo WARNING: Could not determine device tree; fi; \0" \
 	NANDARGS \
@@ -383,7 +398,7 @@
 		"setenv devtype mmc;" \
 		"setenv devnum 1;" \
 		"setenv bootpart 1:2; " \
-		"run findfdt; " \
+		"run envboot; " \
 		"run mmcboot;" \
 	"fi; " \
 	"run usbboot;" \

@@ -25,8 +25,7 @@ static inline int board_is_myd_c437x_evm(void)
 
 static inline int board_is_myd_c437x_idk(void)
 {
-	return true;
-//	return board_myir_is("MYD43IDK");
+	return board_myir_is("MYD43IDK");
 }
 
 static inline int board_is_ricoboard(void)
