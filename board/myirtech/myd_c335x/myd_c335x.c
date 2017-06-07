@@ -89,11 +89,22 @@ static void cpsw_control(int enabled)
 	return;
 }
 
-static struct cpsw_slave_data cpsw_slave = {
-	.slave_reg_ofs	= 0x208,
-	.sliver_reg_ofs	= 0xd80,
-	.phy_addr	= 4,
-	.phy_if		= PHY_INTERFACE_MODE_RGMII,
+static struct cpsw_slave_data cpsw_slaves[] = {
+	{
+		.slave_reg_ofs	= 0x208,
+		.sliver_reg_ofs	= 0xd80,
+		.phy_addr	= 0,
+	},
+//	{
+//		.slave_reg_ofs	= 0x208,
+//		.sliver_reg_ofs	= 0xd80,
+//		.phy_addr	= 1,
+//	},
+	{
+		.slave_reg_ofs	= 0x208,
+		.sliver_reg_ofs	= 0xd80,
+		.phy_addr	= 4,
+	},
 };
 
 static struct cpsw_platform_data cpsw_data = {
@@ -102,8 +113,8 @@ static struct cpsw_platform_data cpsw_data = {
 	.mdio_div		= 0xff,
 	.channels		= 8,
 	.cpdma_reg_ofs		= 0x800,
-	.slaves			= 1,
-	.slave_data		= &cpsw_slave,
+	.slaves			= 2,
+	.slave_data		= cpsw_slaves,
 	.ale_reg_ofs		= 0xd00,
 	.ale_entries		= 1024,
 	.host_port_reg_ofs	= 0x108,
