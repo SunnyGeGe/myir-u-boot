@@ -15,6 +15,10 @@ MYD-AM335X-Y(NAND) 	| myd_y335x_defconfig 	| http://www.myirtech.com/list.asp?id
 MYD-AM335X-Y(EMMC) 	| myd_y335x_emmc_defconfig 	| http://www.myirtech.com/list.asp?id=492  
 MYD-AM335X-J(NAND) 	| myd_j335x_defconfig 	| http://www.myirtech.com/list.asp?id=493  
 MYD-AM335X-J(EMMC) 	| myd_j335x_emmc_defconfig 	| http://www.myirtech.com/list.asp?id=493  
+MYD-C437X(EMMC) 	| myd_c437x_defconfig 	|http://www.myirtech.com/list.asp?id=536 
+MYD-C437X_PRU(EMMC) 	| myd_c437x_defconfig 	| http://www.myirtech.com/list.asp?id=559 
+MYIR_RICOBOARD(EMMC) 	| myir_ricoboard_defconfig 	| http://www.myirtech.com/list.asp?id=510
+MYIR_RICOBOARD(QSPI) 	| myir_ricoboard_qspi_defconfig 	| http://www.myirtech.com/list.asp?id=510 
 
 ## How to build it  
 
@@ -42,6 +46,7 @@ After building, you should get a tree like this:
   myir-u-boot
   ├── MLO
   ├── u-boot.img
+  ├── u-boot.bin	--  for QSPI boot
   ├── u-boot-spl.bin
   └── uEnv.txt
 ```
