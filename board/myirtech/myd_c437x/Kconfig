@@ -14,7 +14,6 @@ config SYS_CONFIG_NAME
 config MYIR_BORAD_NAME
 	string "myir board name"
 	depends on TARGET_MYD_C437X
-	default "myd_c437x_idk"
 source "board/myirtech/common/Kconfig"
 
 endif
