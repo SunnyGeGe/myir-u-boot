@@ -3,3 +3,8 @@ config MYIR_I2C_BOARD_DETECT
 	help
 	   Support for detection board information on MYIRTECH's
 	   Evaluation Boards which have I2C based EEPROM detection
+
+config MYIR_OLD_UBOOT
+	bool "Be Compatible with old u-boot 2011.09"
+	help 
+	   Support for booting legacy uImage of kernel 3.2.0

@@ -308,6 +308,7 @@ static int omap_gpio_probe(struct udevice *dev)
 	return 0;
 }
 
+#ifdef CONFIG_OF_LIBFDT
 static int omap_gpio_bind(struct udevice *dev)
 {
 	struct omap_gpio_platdata *plat = dev->platdata;
@@ -336,6 +337,7 @@ static int omap_gpio_bind(struct udevice *dev)
 
 	return 0;
 }
+#endif
 
 static const struct udevice_id omap_gpio_ids[] = {
 	{ .compatible = "ti,omap3-gpio" },
@@ -348,8 +350,10 @@ U_BOOT_DRIVER(gpio_omap) = {
 	.name	= "gpio_omap",
 	.id	= UCLASS_GPIO,
 	.ops	= &gpio_omap_ops,
+#ifdef CONFIG_OF_LIBFDT
 	.of_match = omap_gpio_ids,
 	.bind	= omap_gpio_bind,
+#endif
 	.probe	= omap_gpio_probe,
 	.priv_auto_alloc_size = sizeof(struct gpio_bank),
 };

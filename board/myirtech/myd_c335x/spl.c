@@ -28,37 +28,37 @@ const struct ctrl_ioregs ioregs = {
 };
 
 static const struct ddr_data ddr3_data = {
-	.datardsratio0		= MT41J128MJT125_RD_DQS,
-	.datawdsratio0		= MT41J128MJT125_WR_DQS,
-	.datafwsratio0		= MT41J128MJT125_PHY_FIFO_WE,
-	.datawrsratio0		= MT41J128MJT125_PHY_WR_DATA,
+	.datardsratio0		= MT41J128MJT125_RD_DQS_400MHz,
+	.datawdsratio0		= MT41J128MJT125_WR_DQS_400MHz,
+	.datafwsratio0		= MT41J128MJT125_PHY_FIFO_WE_400MHz,
+	.datawrsratio0		= MT41J128MJT125_PHY_WR_DATA_400MHz,
 };
 
 static const struct cmd_control ddr3_cmd_ctrl_data = {
-	.cmd0csratio		= MT41J128MJT125_RATIO,
-	.cmd0iclkout		= MT41J128MJT125_INVERT_CLKOUT,
+	.cmd0csratio		= MT41J128MJT125_RATIO_400MHz,
+	.cmd0iclkout		= MT41J128MJT125_INVERT_CLKOUT_400MHz,
 
-	.cmd1csratio		= MT41J128MJT125_RATIO,
-	.cmd1iclkout		= MT41J128MJT125_INVERT_CLKOUT,
+	.cmd1csratio		= MT41J128MJT125_RATIO_400MHz,
+	.cmd1iclkout		= MT41J128MJT125_INVERT_CLKOUT_400MHz,
 
-	.cmd2csratio		= MT41J128MJT125_RATIO,
-	.cmd2iclkout		= MT41J128MJT125_INVERT_CLKOUT,
+	.cmd2csratio		= MT41J128MJT125_RATIO_400MHz,
+	.cmd2iclkout		= MT41J128MJT125_INVERT_CLKOUT_400MHz,
 };
 
 static struct emif_regs ddr3_emif_reg_data = {
-	.sdram_config		= MT41J128MJT125_EMIF_SDCFG,
-	.ref_ctrl		= MT41J128MJT125_EMIF_SDREF,
-	.sdram_tim1		= MT41J128MJT125_EMIF_TIM1,
-	.sdram_tim2		= MT41J128MJT125_EMIF_TIM2,
-	.sdram_tim3		= MT41J128MJT125_EMIF_TIM3,
-	.zq_config		= MT41J128MJT125_ZQ_CFG,
-	.emif_ddr_phy_ctlr_1	= MT41J128MJT125_EMIF_READ_LATENCY |
+	.sdram_config		= MT41J128MJT125_EMIF_SDCFG_400MHz,
+	.ref_ctrl		= MT41J128MJT125_EMIF_SDREF_400MHz,
+	.sdram_tim1		= MT41J128MJT125_EMIF_TIM1_400MHz,
+	.sdram_tim2		= MT41J128MJT125_EMIF_TIM2_400MHz,
+	.sdram_tim3		= MT41J128MJT125_EMIF_TIM3_400MHz,
+	.zq_config		= MT41J128MJT125_ZQ_CFG_400MHz,
+	.emif_ddr_phy_ctlr_1	= MT41J128MJT125_EMIF_READ_LATENCY_400MHz|
 					PHY_EN_DYN_PWRDN,
 };
 
 const struct dpll_params dpll_ddr = {
 /*       M           N            M2  M3  M4  M5  M6 */
-	303, (V_OSCK/1000000) - 1, 1, -1, -1, -1, -1};
+	400, (V_OSCK/1000000) - 1, 1, -1, -1, -1, -1};
 
 void am33xx_spl_board_init(void)
 {
@@ -86,7 +86,8 @@ static void probe_sdram_size(long size)
 		ddr3_emif_reg_data.sdram_config = MT41J256MJT125_EMIF_SDCFG;
 		break;
 	case SZ_256M:
-		ddr3_emif_reg_data.sdram_config = MT41J128MJT125_EMIF_SDCFG;
+//		ddr3_emif_reg_data.sdram_config = MT41J128MJT125_EMIF_SDCFG;
+		ddr3_emif_reg_data.sdram_config = MT41J128MJT125_EMIF_SDCFG_400MHz;
 		break;
 	case SZ_128M:
 		ddr3_emif_reg_data.sdram_config = MT41J64MJT125_EMIF_SDCFG;
@@ -96,7 +97,7 @@ static void probe_sdram_size(long size)
 		reset_cpu(0);
 	}
 	debug("%s: setting DRAM size to %ldM\n", __func__, size >> 20);
-	config_ddr(303, &ioregs, &ddr3_data,
+	config_ddr(400, &ioregs, &ddr3_data,
 		   &ddr3_cmd_ctrl_data, &ddr3_emif_reg_data, 0);
 }
 

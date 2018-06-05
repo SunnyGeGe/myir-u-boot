@@ -81,6 +81,22 @@ static struct module_pin_mux rgmii1_pin_mux[] = {
 	{OFFSET(mdio_clk), MODE(0) | PULLUP_EN},	/* MDIO_CLK */
 	{-1},
 };
+static struct module_pin_mux rmii1_pin_mux[] = {
+
+
+    {OFFSET(mii1_txen), MODE(1)}, /*RMII1_TXEN */
+    {OFFSET(mii1_rxerr), MODE(1) | RXACTIVE}, /* RMII1_RX_ERR */
+    {OFFSET(mii1_txd1), MODE(1)}, /*RMII1_TXD1 */
+    {OFFSET(mii1_txd0), MODE(1)}, /*RMII1_TXD1 */
+    {OFFSET(mii1_rxd1), MODE(1) |RXACTIVE}, /* RMII1_RXD1 */
+    {OFFSET(mii1_rxd0), MODE(1) |RXACTIVE}, /* RMII1_RXD1 */
+    {OFFSET(mii1_crs), MODE(1) | RXACTIVE},/* RMII1_CRS_DV */
+    {OFFSET(rmii1_refclk), MODE(0) |RXACTIVE}, /* RMII1_REFCLK */
+    {OFFSET(mdio_data), MODE(0) | RXACTIVE| PULLUP_EN},/* MDIO_DATA */
+    {OFFSET(mdio_clk), MODE(0) |PULLUP_EN}, /* MDIO_CLK */
+    {-1},
+
+};
 
 
 #ifdef CONFIG_NAND
@@ -126,6 +142,7 @@ static struct module_pin_mux emmc_pin_mux[] = {
 	{OFFSET(gpmc_ad5), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT5 */
 	{OFFSET(gpmc_ad6), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT6 */
 	{OFFSET(gpmc_ad7), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_DAT7 */
+    {OFFSET(gpmc_csn0), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_RST */    
 	{-1},
 };
 

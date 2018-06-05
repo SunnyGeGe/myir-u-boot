@@ -26,9 +26,15 @@
 # define CONFIG_LZO
 #endif
 
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define CONFIG_CMDLINE_TAG              /* enable passing of ATAGs */
+#define CONFIG_SETUP_MEMORY_TAGS		/* enable passing of mem ATAGs */
+#define CONFIG_INITRD_TAG               /* Required for ramdisk support */
+#endif
+
 #define CONFIG_SYS_BOOTM_LEN		(16 << 20)
 
-#define MACH_TYPE_MYD_Y335X		4591	/* Until the next sync */
+#define MACH_TYPE_MYD_Y335X		3589	/* Until the next sync */
 #define CONFIG_MACH_TYPE		MACH_TYPE_MYD_Y335X
 #undef CONFIG_BOARD_LATE_INIT
 #undef CONFIG_SPL_OS_BOOT
@@ -50,12 +56,97 @@
 #define CONFIG_PHY_ATHEROS
 
 #ifdef CONFIG_NAND
-#define NANDARGS \
+#define LOADMLO \
+	"loadmlo=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/MLO\0" 
+#define LOADUBOOT \
+	"loaduboot=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/u-boot.img\0" 
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define LOADKERNEL \
+	"loadkernel=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/uImage\0"
+#else
+#define LOADKERNEL \
+	"loadkernel=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/${bootfile}\0"
+#endif	
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define LOADFILESYSTEM \
+	"loadrootfs=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/ubi.img\0" 
+#else
+#define LOADFILESYSTEM \
+	"loadrootfs=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/rootfs.ubi\0" 
+#endif
+#define UPDATEMLO 	\
+	"updatemlo=if run loadmlo; then " \
+				"nand erase.part NAND.SPL; " \
+				"nand write ${loadaddr} 0 ${filesize};" \
+				"nand erase.part NAND.SPL.backup1; " \
+				"nand write ${loadaddr} 0x20000 ${filesize};" \
+				"nand erase.part NAND.SPL.backup2; " \
+				"nand write ${loadaddr} 0x40000 ${filesize};" \
+				"nand erase.part NAND.SPL.backup3; " \
+				"nand write ${loadaddr} 0x60000 ${filesize};" \
+			"fi;\0"
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define UPDATEUBOOT \
+	"updateuboot=if run loaduboot; then " \
+				"nand erase.part NAND.u-boot;" \
+				"nand write ${loadaddr} 0x80000 ${filesize};" \
+			"fi;\0" 
+#else
+#define UPDATEUBOOT \
+	"updateuboot=if run loaduboot; then " \
+				"nand erase.part NAND.u-boot;" \
+				"nand erase.part NAND.u-boot-env;" \
+				"nand erase.part NAND.u-boot-env.backup1;" \
+				"nand write ${loadaddr} 0xc0000 ${filesize};" \
+			"fi;\0" 
+#endif
+
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define UPDATEFDT  "updatefdt=echo no fdt;\0" 
+#else
+#define UPDATEFDT  \
+	"updatefdt=if run loadfdt; then " \
+				"nand erase.part NAND.u-boot-spl-os;" \
+				"nand write ${fdtaddr} 0x80000 ${filesize};" \
+			"fi;\0" 
+#endif
+
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define UPDATEKERNEL \
+	"updatekernel=if run loadkernel; then " \
+			"nand erase.part NAND.kernel;" \
+			"nand write ${loadaddr} 0x280000 ${filesize};" \
+		"fi; \0" 
+#else
+#define UPDATEKERNEL \
+	"updatekernel=if run loadkernel; then " \
+			"nand erase.part NAND.kernel;" \
+			"nand write ${loadaddr} 0x200000 ${filesize};" \
+		"fi; \0" 
+#endif
+
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define UPDATEFILESYSTEM \
+	"updatefilesystem=if run loadrootfs; then " \
+				"nand erase.part NAND.rootfs;" \
+				"nand write ${loadaddr} 0x780000 ${filesize};" \
+			"fi; \0" 
+#else
+#define UPDATEFILESYSTEM \
+	"updatefilesystem=if run loadrootfs; then " \
+				"nand erase.part NAND.rootfs;" \
+				"nand write ${loadaddr} 0xa00000 ${filesize};" \
+			"fi; \0" 
+#endif
+
+#define UPDATEALL \
 	"updatesys=mmc dev 0;" \
 		"if mmc rescan; then " \
 			"setenv mmcdev 0; " \
 			"setenv devtype mmc; " \
 			"setenv devnum 0; " \
+			"setenv bootdir /; " \
+			"setenv bootpart 0:1;" \
 		"fi; " \
 		"usb start ${usbdev}; " \
 		"if usb dev ${usbdev}; then " \
@@ -70,45 +161,55 @@
 			"echo Running updatecmd ...;" \
 			"run updatecmd;" \
 		"else " \
-			"if run loaduboot; then " \
-				"nand erase.part NAND.SPL; " \
-				"nand erase.part NAND.u-boot;" \
-				"nand erase.part NAND.u-boot-env;" \
-				"nand erase.part NAND.u-boot-env.backup1;" \
-				"fatload ${devtype} 0 ${loadaddr} MLO; 				nand write ${loadaddr} 0 ${filesize};" \
-				"fatload ${devtype} 0 ${loadaddr} u-boot.img; 		nand write ${loadaddr} 0xc0000 ${filesize};" \
-			"fi; " \
-			"if run loadfdt; then " \
-				"nand erase.part NAND.u-boot-spl-os;" \
-				"nand write ${fdtaddr} 0x80000 ${filesize};" \
-			"fi; " \
-			"if run loadimage; then " \
-				"nand erase.part NAND.kernel;" \
-				"nand write ${loadaddr} 0x200000 ${filesize};" \
-			"fi; " \
-			"if run loadrootfs; then " \
-				"nand erase.part NAND.rootfs;" \
-				"nand write ${loadaddr} 0xa00000 ${filesize};" \
-			"fi; " \
+			"run updatemlo; " \
+			"run updateuboot; " \
+			"run updatefdt; " \
+			"run updatekernel; " \
+			"run updatefilesystem; " \
 		"fi; " \
 		"if usb dev ${usbdev}; then " \
 			"usb stop ${usbdev};" \
-		"fi; \0" \
-	"loaduboot=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/MLO;load ${devtype} ${devnum} ${loadaddr} ${bootdir}/u-boot.img\0" \
-	"loadrootfs=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/rootfs.ubi\0" \
+		"fi; \0" 	
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define NANDBOOTCMD \
+	"nandboot=echo Booting from nand ...; " \
+		"run nandargs; " \
+		"nand read ${loadaddr} NAND.kernel; " \
+		"if bootm ${loadaddr}; then " \
+			"echo 'boot success, never run here!'; "\
+		"fi;\0"	
+#else
+#define NANDBOOTCMD \
+	"nandboot=echo Booting from nand ...; " \
+		"run nandargs; " \
+		"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
+		"nand read ${loadaddr} NAND.kernel; " \
+		"if bootz ${loadaddr} - ${fdtaddr}; then " \
+			"echo 'boot success, never run here!'; "\
+		"fi;\0"	
+#endif
+#define NANDROOT \
+	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048\0" \
+	"nandrootfstype=ubifs rootwait=1\0" 
+#define NANDARGS  \
+	LOADMLO \
+	LOADUBOOT \
+	LOADKERNEL \
+	LOADFILESYSTEM \
+	UPDATEMLO \
+	UPDATEUBOOT \
+	UPDATEFDT \
+	UPDATEKERNEL \
+	UPDATEFILESYSTEM \
+	UPDATEALL \
 	"mtdids=" MTDIDS_DEFAULT "\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"nandargs=setenv bootargs console=${console} " \
 		"${optargs} " \
 		"root=${nandroot} " \
 		"rootfstype=${nandrootfstype}\0" \
-	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048\0" \
-	"nandrootfstype=ubifs rootwait=1\0" \
-	"nandboot=echo Booting from nand ...; " \
-		"run nandargs; " \
-		"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
-		"nand read ${loadaddr} NAND.kernel; " \
-		"bootz ${loadaddr} - ${fdtaddr}\0"
+	NANDROOT \
+	NANDBOOTCMD
 #else
 #define NANDARGS ""
 #endif
@@ -363,6 +464,18 @@
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 #define CONFIG_NAND_OMAP_ECCSCHEME	OMAP_ECC_BCH8_CODE_HW
 #define MTDIDS_DEFAULT			"nand0=nand.0"
+
+#ifdef CONFIG_MYIR_OLD_UBOOT
+#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+					"128k(NAND.SPL)," \
+					"128k(NAND.SPL.backup1)," \
+					"128k(NAND.SPL.backup2)," \
+					"128k(NAND.SPL.backup3)," \
+					"1920k(NAND.u-boot)," \
+					"128k(NAND.u-boot-env)," \
+					"5120k(NAND.kernel)," \
+					"-(NAND.rootfs)"
+#else
 #define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
@@ -375,14 +488,24 @@
 					"8m(NAND.kernel)," \
 					"214m(NAND.rootfs)," \
 					"-(NAND.userdata)"
-#define CONFIG_SYS_NAND_U_BOOT_OFFS	0x000c0000
+#endif
+#if defined(CONFIG_MYIR_OLD_UBOOT)
+#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00080000
+#else
+#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
+#endif
+
 /* NAND: SPL related configs */
 #ifdef CONFIG_SPL_NAND_SUPPORT
 #define CONFIG_SPL_NAND_AM33XX_BCH
 #endif
 #ifdef CONFIG_SPL_OS_BOOT
 #define CONFIG_CMD_SPL_NAND_OFS	0x00080000 /* os parameters */
+#if defined(CONFIG_MYIR_OLD_UBOOT)
+#define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00280000 /* kernel offset */
+#else
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00200000 /* kernel offset */
+#endif
 #define CONFIG_CMD_SPL_WRITE_SIZE	0x2000
 #endif
 #endif /* !CONFIG_NAND */

@@ -90,7 +90,7 @@ static int bootm_find_os(cmd_tbl_t *cmdtp, int flag, int argc,
 	/* get kernel image header, start address and length */
 	os_hdr = boot_get_kernel(cmdtp, flag, argc, argv,
 			&images, &images.os.image_start, &images.os.image_len);
-	if (images.os.image_len == 0) {
+	if ((images.os.image_len == 0) || (os_hdr == NULL)) {
 		puts("ERROR: can't get kernel image!\n");
 		return 1;
 	}
