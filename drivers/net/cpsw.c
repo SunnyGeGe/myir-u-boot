@@ -27,6 +27,8 @@
 #include <asm/arch/cpu.h>
 #include <dm.h>
 #include <fdt_support.h>
+#include <asm/arch/gpio.h>
+#include <asm/gpio.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -972,8 +974,16 @@ static int cpsw_phy_init(struct cpsw_priv *priv, struct cpsw_slave *slave)
 			priv->dev,
 			slave->data->phy_if);
 
-	if (!phydev)
+	if (!phydev){
+		if(slave->data->phy_addr == 0x04){
+			int wdi = 32*3+19;
+			gpio_request(wdi, "WDI");
+			gpio_direction_output(wdi, 0);
+			gpio_set_value(wdi,0);
+			mdelay(500);
+		}
 		return -1;
+	}
 
 	phydev->supported &= supported;
 	phydev->advertising = phydev->supported;
