@@ -32,11 +32,16 @@
 #define CONFIG_INITRD_TAG               /* Required for ramdisk support */
 #endif
 
+#if defined(CONFIG_MYIR_UBOOT_BACKUP)
+#define CONFIG_SPL_PANIC_ON_RAW_IMAGE 1
+#endif
+
 #define CONFIG_SYS_BOOTM_LEN		(16 << 20)
 
 #define MACH_TYPE_MYD_C335X		3589	/* Until the next sync */
 #define CONFIG_MACH_TYPE		MACH_TYPE_MYD_C335X
 #undef CONFIG_BOARD_LATE_INIT
+#undef CONFIG_SYS_BOOT_RAMDISK_HIGH
 #undef CONFIG_SPL_OS_BOOT
 /* Clock Defines */
 #define V_OSCK				24000000  /* Clock output from T2 */
@@ -63,9 +68,18 @@
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define LOADKERNEL \
 	"loadkernel=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/uImage\0"
+#define LOADRECOVERY "loadrecovery=echo 'no recovery partitions.'; \0"
+#else
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+#define LOADKERNEL \
+	"loadkernel=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/kernel.img; \0"
+#define LOADRECOVERY \
+	"loadrecovery=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/recovery.img; \0"
 #else
 #define LOADKERNEL \
 	"loadkernel=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/${bootfile}\0"
+#define LOADRECOVERY "loadrecovery=echo 'no recovery partitions.'; \0"
+#endif
 #endif	
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define LOADFILESYSTEM \
@@ -85,6 +99,19 @@
 				"nand erase.part NAND.SPL.backup3; " \
 				"nand write ${loadaddr} NAND.SPL.backup3 ${filesize};" \
 			"fi;\0"
+#ifdef CONFIG_MYIR_UBOOT_BACKUP			
+#define UPDATEUBOOT \
+	"updateuboot=if run loaduboot; then " \
+				"nand erase.part NAND.u-boot;" \
+				"nand write ${loadaddr} 0xc0000 ${filesize};" \
+				"nand erase.part NAND.u-boot.backup1;" \
+				"nand write ${loadaddr} 0x200000 ${filesize};" \
+				"nand erase.part NAND.u-boot.backup2;" \
+				"nand write ${loadaddr} 0x300000 ${filesize};" \
+				"nand erase.part NAND.u-boot-env;" \
+				"nand erase.part NAND.u-boot-env.backup1;" \
+			"fi;\0" 
+#else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define UPDATEUBOOT \
 	"updateuboot=if run loaduboot; then " \
@@ -100,6 +127,7 @@
 				"nand write ${loadaddr} NAND.u-boot ${filesize};" \
 			"fi;\0" 
 #endif
+#endif
 
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define UPDATEFDT  "updatefdt=echo no fdt;\0" 
@@ -111,6 +139,15 @@
 			"fi;\0" 
 #endif
 
+#ifdef CONFIG_MYIR_UBOOT_BACKUP			
+#define UPDATEKERNEL \
+	"updatekernel=if run loadkernel; then " \
+				"nand erase.part NAND.kernel;" \
+				"nand write ${loadaddr} 0x400000 ${filesize};" \
+				"nand erase.part NAND.kernel.backup1;" \
+				"nand write ${loadaddr} 0xc00000 ${filesize};" \
+			"fi; \0" 
+#else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define UPDATEKERNEL \
 	"updatekernel=if run loadkernel; then " \
@@ -124,7 +161,25 @@
 			"nand write ${loadaddr} NAND.kernel ${filesize};" \
 		"fi; \0" 
 #endif
+#endif
 
+#ifdef CONFIG_MYIR_UBOOT_BACKUP			
+#define  UPDATERECOVERY \
+	"updaterecovery=if run loadrecovery; then " \
+	"nand erase.part NAND.recovery;" \
+	"nand write ${loadaddr} 0x1400000 ${filesize};" \
+	"fi; \0"
+#else
+#define UPDATERECOVERY "updaterecovery=echo 'no uboot backup partitions.'; \0"
+#endif
+
+#ifdef CONFIG_MYIR_UBOOT_BACKUP			
+#define UPDATEFILESYSTEM \
+	"updatefilesystem=if run loadrootfs; then " \
+				"nand erase.part NAND.rootfs;" \
+				"nand write ${loadaddr} 0x3400000 ${filesize};" \
+			"fi; \0" 
+#else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define UPDATEFILESYSTEM \
 	"updatefilesystem=if run loadrootfs; then " \
@@ -138,7 +193,7 @@
 				"nand write ${loadaddr} NAND.rootfs ${filesize};" \
 			"fi; \0" 
 #endif
-
+#endif
 #define UPDATEALL \
 	"updatesys=mmc dev 0;" \
 		"if mmc rescan; then " \
@@ -165,11 +220,59 @@
 			"run updateuboot; " \
 			"run updatefdt; " \
 			"run updatekernel; " \
+			"run updaterecovery; " \
 			"run updatefilesystem; " \
+			"saveenv; saveenv; " \
 		"fi; " \
 		"if usb dev ${usbdev}; then " \
 			"usb stop ${usbdev};" \
 		"fi; \0" 	
+#ifdef CONFIG_MYIR_UBOOT_BACKUP			
+#define CHECKUBOOT \
+	"checkuboot=if test ${ubootid} = 2; then " \
+					"nand erase.part NAND.u-boot;" \
+					"nand erase.part NAND.u-boot.backup1;" \
+					"nand read ${loadaddr} NAND.u-boot.backup2; " \
+					"nand write ${loadaddr} 0xc0000 0x100000; " \
+					"nand write ${loadaddr} 0x200000 0x100000; " \
+				"else; " \
+					"if test ${ubootid} = 1; then " \
+						"nand erase.part NAND.u-boot;" \
+						"nand read ${loadaddr} NAND.u-boot.backup1; " \
+						"nand write ${loadaddr} 0xc0000 0x100000; " \
+					"fi;" \
+				"fi;\0" 
+
+/* recoveryid  0: normal  1: update  2: reset2factory */				
+#define CHECKRECOVERY "checkrecovery=if test -n $recoveryid ; then " \
+				"if test ${recoveryid} != 0; then " \
+					"nand read ${loadaddr}  NAND.recovery; " \
+					"run ramargs; " \
+					"bootm  ${loadaddr}; " \
+					"fi;" \
+				"fi;\0" 
+#else
+#define CHECKUBOOT "checkuboot=echo 'no uboot backup partitions.';\0"
+#define CHECKRECOVERY "checkrecovery=echo 'check no recovery partitions.'; \0"
+#endif
+#ifdef CONFIG_MYIR_UBOOT_BACKUP			
+#define NANDBOOTCMD \
+	"nandboot=echo Booting from nand ...; " \
+		"run checkuboot; " \
+		"run checkrecovery; " \
+		"run nandargs; " \
+		"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
+		"nand read ${loadaddr} NAND.kernel; " \
+		"if bootm ${loadaddr}; then " \
+			"echo 'boot success, never run here!'; "\
+		"else; " \
+			"echo 'NAND.kernel error, try NAND.kernel.backup1'; "\
+			"nand erase.part NAND.kernel; " \
+			"nand read ${loadaddr} NAND.kernel.backup1; " \
+			"nand write ${loadaddr} 0x400000 0x800000;" \
+			"bootm ${loadaddr};" \
+		"fi;\0"	
+#else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define NANDBOOTCMD \
 	"nandboot=echo Booting from nand ...; " \
@@ -188,11 +291,7 @@
 			"echo 'boot success, never run here!'; "\
 		"fi;\0"	
 #endif
-#ifdef CONFIG_MYIR_NAND_8G08
-#define NANDROOT \
-	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,4096\0" \
-	"nandrootfstype=ubifs rootwait=1\0" 
-#else
+#endif
 #define NANDROOT \
 	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048\0" \
 	"nandrootfstype=ubifs rootwait=1\0" 
@@ -201,11 +300,15 @@
 	LOADMLO \
 	LOADUBOOT \
 	LOADKERNEL \
+	LOADRECOVERY \
 	LOADFILESYSTEM \
+	CHECKUBOOT \
+	CHECKRECOVERY \
 	UPDATEMLO \
 	UPDATEUBOOT \
 	UPDATEFDT \
 	UPDATEKERNEL \
+	UPDATERECOVERY \
 	UPDATEFILESYSTEM \
 	UPDATEALL \
 	"mtdids=" MTDIDS_DEFAULT "\0" \
@@ -493,6 +596,24 @@
 #define CONFIG_NAND_OMAP_ECCSCHEME	OMAP_ECC_BCH8_CODE_HW
 #define MTDIDS_DEFAULT			"nand0=nand.0"
 
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+					"128k(NAND.SPL)," \
+					"128k(NAND.SPL.backup1)," \
+					"128k(NAND.SPL.backup2)," \
+					"128k(NAND.SPL.backup3)," \
+					"256k(NAND.u-boot-spl-os)," \
+					"1m(NAND.u-boot)," \
+					"128k(NAND.u-boot-env)," \
+					"128k(NAND.u-boot-env.backup1)," \
+					"1m(NAND.u-boot.backup1)," \
+					"1m(NAND.u-boot.backup2)," \
+					"8m(NAND.kernel)," \
+					"8m(NAND.kernel.backup1)," \
+					"32m(NAND.recovery)," \
+					"108m(NAND.rootfs)," \
+					"-(NAND.userdata)"
+#else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
 					"128k(NAND.SPL)," \
@@ -532,7 +653,7 @@
 					"-(NAND.userdata)"
 #endif
 #endif
-#if defined(CONFIG_MYIR_OLD_UBOOT)
+#if defined(CONFIG_MYIR_OLD_UBOOT) && !defined(CONFIG_MYIR_UBOOT_BACKUP)
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00080000
 #else
 #ifdef CONFIG_MYIR_NAND_8G08
@@ -540,6 +661,9 @@
 #else
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
 #endif
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+#define CONFIG_SYS_NAND_U_BOOT1_OFFS	0x00200000
+#define CONFIG_SYS_NAND_U_BOOT2_OFFS	0x00300000
 #endif
 
 /* NAND: SPL related configs */
@@ -551,8 +675,9 @@
 #define CONFIG_CMD_SPL_NAND_OFS	0x00200000 /* os parameters */
 #else
 #define CONFIG_CMD_SPL_NAND_OFS	0x00080000 /* os parameters */
-#endif
-
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+#define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00400000 /* kernel offset */
+#else
 #if defined(CONFIG_MYIR_OLD_UBOOT)
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00280000 /* kernel offset */
 #else
@@ -562,7 +687,7 @@
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00200000 /* kernel offset */
 #endif
 #endif
-#define CONFIG_CMD_SPL_WRITE_SIZE	CONFIG_SYS_NAND_BLOCK_SIZE
+#define CONFIG_CMD_SPL_WRITE_SIZE	0x2000
 #endif
 #endif /* !CONFIG_NAND */
 

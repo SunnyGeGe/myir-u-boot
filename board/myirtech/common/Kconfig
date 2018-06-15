@@ -9,8 +9,7 @@ config MYIR_OLD_UBOOT
 	help 
 	   Support for booting legacy uImage of kernel 3.2.0
 
-config MYIR_NAND_8G08
-	bool "Support for 8G08 Nand Flash"
-	depends on !MYIR_OLD_UBOOT
+config MYIR_UBOOT_BACKUP
+	bool "Support u-boot and kernel backup partitions myir dev boards"
 	help 
-	   Support for 8G08 Nand Flash with the pagesize 4096
+	   Backup and restore u-boot and legacy uImage

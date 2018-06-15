@@ -12,6 +12,7 @@
 #include <cli.h>
 #include <console.h>
 #include <version.h>
+#include <asm/omap_common.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -56,6 +57,12 @@ void main_loop(void)
 #ifdef CONFIG_VERSION_VARIABLE
 	setenv("ver", version_string);  /* set version variable */
 #endif /* CONFIG_VERSION_VARIABLE */
+
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+	u32 ubootid = *((u32 *)(OMAP_SRAM_SCRATCH_BOARD_EEPROM_END - 4));
+	setenv_ulong("ubootid", ubootid);
+#endif
+
 
 	cli_init();
 

@@ -10,6 +10,7 @@
 #include <dm.h>
 #include <spl.h>
 #include <asm/u-boot.h>
+#include <asm/omap_common.h>
 #include <nand.h>
 #include <fat.h>
 #include <version.h>
@@ -54,6 +55,17 @@ __weak int spl_start_uboot(void)
 }
 #endif
 
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+void spl_set_uboot_id(ulong id)
+{
+	u32 *ubootid = (u32 *)(OMAP_SRAM_SCRATCH_BOARD_EEPROM_END - 4);
+
+	*ubootid = id;
+	
+	debug("SPL: uboot_id = %ld\r\n" , id);
+}
+#endif
+
 /*
  * Weak default function for board specific cleanup/preparation before
  * Linux boot. Some boards/platforms might not need it, so just provide
@@ -78,9 +90,11 @@ void spl_set_header_raw_uboot(void)
 	spl_image.name = "U-Boot";
 }
 
-void spl_parse_image_header(const struct image_header *header)
+int spl_parse_image_header(const struct image_header *header)
 {
 	u32 header_size = sizeof(struct image_header);
+	struct image_header *pheader;
+	u32 header_crc = 0;
 
 	if (image_get_magic(header) == IH_MAGIC) {
 		if (spl_image.flags & SPL_COPY_PAYLOAD_ONLY) {
@@ -92,6 +106,8 @@ void spl_parse_image_header(const struct image_header *header)
 			spl_image.load_addr = image_get_load(header);
 			spl_image.entry_point = image_get_ep(header);
 			spl_image.size = image_get_data_size(header);
+			spl_image.hcrc = 0;
+			spl_image.dcrc = 0;
 		} else {
 			spl_image.entry_point = image_get_load(header);
 			/* Load including the header */
@@ -99,12 +115,35 @@ void spl_parse_image_header(const struct image_header *header)
 				header_size;
 			spl_image.size = image_get_data_size(header) +
 				header_size;
+			spl_image.hcrc = image_get_hcrc(header);
+			spl_image.dcrc = image_get_dcrc(header);
 		}
 		spl_image.os = image_get_os(header);
 		spl_image.name = image_get_name(header);
 		debug("spl: payload image: %.*s load addr: 0x%x size: %d\n",
 			(int)sizeof(spl_image.name), spl_image.name,
 			spl_image.load_addr, spl_image.size);
+		debug("spl: payload image: %s  header at 0x%x , hcrc : 0x%x  dcrc: 0x%x\n",
+						   spl_image.name, (unsigned int)header, spl_image.hcrc, spl_image.dcrc);
+		
+				   pheader = (struct image_header *)(header);
+				   pheader->ih_hcrc = 0;
+		
+				   header_crc = crc32 (0, (const unsigned char *)pheader, header_size);
+		
+				   debug("spl: payload image: %s  header crc 0x%x , hcrc : 0x%x\n",
+						   spl_image.name, header_crc, spl_image.hcrc);
+		
+				   if(header_crc == spl_image.hcrc){
+						   return 0;
+				   }
+				   else
+				   {
+					debug("spl: payload image: %s header crc is not correct!\n", spl_image.name);
+				        return 1;
+				   }
+
+		
 	} else {
 #ifdef CONFIG_SPL_PANIC_ON_RAW_IMAGE
 		/*
@@ -115,12 +154,15 @@ void spl_parse_image_header(const struct image_header *header)
 		 * will consider that a completely unreadable NAND block
 		 * is bad, and thus should be skipped silently.
 		 */
-		panic("** no mkimage signature but raw image not supported");
+		printf("** no mkimage signature but raw image not supported");
+		return 1;
 #else
 		/* Signature not found - assume u-boot.bin */
 		debug("mkimage signature not found - ih_magic = %x\n",
 			header->ih_magic);
+
 		spl_set_header_raw_uboot();
+		return 0;
 #endif
 	}
 }

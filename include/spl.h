@@ -25,6 +25,8 @@ struct spl_image_info {
 	u8 os;
 	u32 load_addr;
 	u32 entry_point;
+	u32 hcrc;
+	u32 dcrc;
 	u32 size;
 	u32 flags;
 };
@@ -67,8 +69,11 @@ extern struct spl_image_info spl_image;
 void preloader_console_init(void);
 u32 spl_boot_device(void);
 u32 spl_boot_mode(void);
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+void spl_set_uboot_id(ulong id);
+#endif
 void spl_set_header_raw_uboot(void);
-void spl_parse_image_header(const struct image_header *header);
+int spl_parse_image_header(const struct image_header *header);
 void spl_board_prepare_for_linux(void);
 void spl_board_prepare_for_boot(void);
 void __noreturn jump_to_image_linux(void *arg);

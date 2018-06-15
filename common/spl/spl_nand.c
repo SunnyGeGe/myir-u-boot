@@ -59,9 +59,25 @@ static int spl_nand_load_element(int offset, struct image_header *header)
 		load.read = spl_nand_fit_read;
 		return spl_load_simple_fit(&load, offset, header);
 	} else {
-		spl_parse_image_header(header);
-		return nand_spl_load_image(offset, spl_image.size,
+		err = spl_parse_image_header(header);
+		if(err!=0){
+			printf("\n spl: nand  error image header at 0x%x !\n", offset);
+			return err;
+		}
+		
+		nand_spl_load_image(offset, spl_image.size,
 					   (void *)spl_image.load_addr);
+
+		u32 dcrc = crc32(0, (const unsigned char *)spl_image.entry_point, spl_image.size-sizeof(struct image_header));
+		
+		debug("spl: nand u-boot dcrc = 0x%x, header->ih_dcrc= 0x%x\n", dcrc, spl_image.dcrc);
+		if(dcrc == spl_image.dcrc){
+				return 0;
+		}
+		else
+		{
+			return 1;
+		}
 	}
 }
 
@@ -123,13 +139,43 @@ int spl_nand_load_image(void)
 	}
 #endif
 #ifdef CONFIG_NAND_ENV_DST
+	debug("CONFIG_NAND_ENV_DST\n");
 	spl_nand_load_element(CONFIG_ENV_OFFSET, header);
+	debug("CONFIG_NAND_ENV_DST.\n");
 #ifdef CONFIG_ENV_OFFSET_REDUND
+	debug("CONFIG_ENV_OFFSET_REDUND\n");
 	spl_nand_load_element(CONFIG_ENV_OFFSET_REDUND, header);
+	debug("CONFIG_ENV_OFFSET_REDUND.\n");
 #endif
 #endif
 	/* Load u-boot */
+	debug("CONFIG_SYS_NAND_U_BOOT_OFFS\n");
 	err = spl_nand_load_element(CONFIG_SYS_NAND_U_BOOT_OFFS, header);
+	debug("CONFIG_SYS_NAND_U_BOOT_OFFS.\n");
+#ifdef CONFIG_MYIR_UBOOT_BACKUP	
+	if(err!=0){
+		debug("CONFIG_SYS_NAND_U_BOOT1_OFFS\n");
+		err = spl_nand_load_element(CONFIG_SYS_NAND_U_BOOT1_OFFS, header);
+		debug("CONFIG_SYS_NAND_U_BOOT1_OFFS.\n");
+	}
+	else
+	{
+		spl_set_uboot_id(0);
+		nand_deselect();
+		return err;
+	}
+
+	if(err!=0){
+		debug("CONFIG_SYS_NAND_U_BOOT2_OFFS\n");
+		err = spl_nand_load_element(CONFIG_SYS_NAND_U_BOOT2_OFFS, header);
+		debug("CONFIG_SYS_NAND_U_BOOT2_OFFS.\n");
+		spl_set_uboot_id(2);
+	}	
+	else
+	{
+		spl_set_uboot_id(1);
+	}
+#endif	
 	nand_deselect();
 	return err;
 }
