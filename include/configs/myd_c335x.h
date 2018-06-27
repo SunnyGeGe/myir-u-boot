@@ -178,6 +178,8 @@
 	"updatefilesystem=if run loadrootfs; then " \
 				"nand erase.part NAND.rootfs;" \
 				"nand write ${loadaddr} 0x3400000 ${filesize};" \
+				"nand erase.part NAND.rootfs.backup1;" \
+				"nand write ${loadaddr} 0x7400000 ${filesize};" \
 			"fi; \0" 
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
@@ -243,35 +245,50 @@
 					"fi;" \
 				"fi;\0" 
 
-/* recoveryid  0: normal  1: update  2: reset2factory */				
-#define CHECKRECOVERY "checkrecovery=if test -n $recoveryid ; then " \
-				"if test ${recoveryid} != 0; then " \
+/* recoveryid  0/null: normal  1: update  2: reset2factory */				
+#define CHECKRECOVERY "checkrecovery=if test -n $recoveryid && test ${recoveryid} != 0; then " \
 					"nand read ${loadaddr}  NAND.recovery; " \
 					"run ramargs; " \
 					"bootm  ${loadaddr}; " \
-					"fi;" \
 				"fi;\0" 
+/* kernelid  0/null: normal  1: backup1 */
+#define CHECKKERNEL "checkkernel=if test -n $kernelid && test ${kernelid} = 1; then " \
+				"nand read ${loadaddr} NAND.kernel.backup1; " \
+				"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
+				"if bootm ${loadaddr}; then " \
+					"echo 'boot success, never run here!'; "\
+				"else; " \
+					"echo 'NAND.kernel.backup1 error, try NAND.kernel'; "\
+					"nand read ${loadaddr} NAND.kernel; " \
+					"bootm ${loadaddr};" \
+				"fi; "	\
+			"fi; \0"
+/* rootfsid 0/null: normal  1: backup1 */
+#define CHECKROOTFS "checkrootfs=if test -n $rootfsid && test ${rootfsid} = 1; then setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; fi; \0"
 #else
 #define CHECKUBOOT "checkuboot=echo 'no uboot backup partitions.';\0"
 #define CHECKRECOVERY "checkrecovery=echo 'check no recovery partitions.'; \0"
+#define CHECKKERNEL "checkkernel=echo 'no kernel backup partitions.'; \0"
+#define CHECKROOTFS "checkrootfs=echo 'no rootfs backup partitions.'; \0"
 #endif
 #ifdef CONFIG_MYIR_UBOOT_BACKUP			
 #define NANDBOOTCMD \
 	"nandboot=echo Booting from nand ...; " \
 		"run checkuboot; " \
 		"run checkrecovery; " \
+		"run checkrootfs; " \
 		"run nandargs; " \
-		"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
+		"run checkkernel;" \
 		"nand read ${loadaddr} NAND.kernel; " \
+		"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
 		"if bootm ${loadaddr}; then " \
 			"echo 'boot success, never run here!'; "\
 		"else; " \
 			"echo 'NAND.kernel error, try NAND.kernel.backup1'; "\
-			"nand erase.part NAND.kernel; " \
 			"nand read ${loadaddr} NAND.kernel.backup1; " \
-			"nand write ${loadaddr} 0x400000 0x800000;" \
 			"bootm ${loadaddr};" \
-		"fi;\0"	
+		"fi; \0"
+
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define NANDBOOTCMD \
@@ -295,7 +312,6 @@
 #define NANDROOT \
 	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048\0" \
 	"nandrootfstype=ubifs rootwait=1\0" 
-#endif
 #define NANDARGS  \
 	LOADMLO \
 	LOADUBOOT \
@@ -304,6 +320,8 @@
 	LOADFILESYSTEM \
 	CHECKUBOOT \
 	CHECKRECOVERY \
+	CHECKKERNEL \
+	CHECKROOTFS \
 	UPDATEMLO \
 	UPDATEUBOOT \
 	UPDATEFDT \
@@ -611,7 +629,8 @@
 					"8m(NAND.kernel)," \
 					"8m(NAND.kernel.backup1)," \
 					"32m(NAND.recovery)," \
-					"108m(NAND.rootfs)," \
+					"64m(NAND.rootfs)," \
+					"64m(NAND.rootfs.backup1)," \
 					"-(NAND.userdata)"
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
@@ -653,11 +672,13 @@
 					"-(NAND.userdata)"
 #endif
 #endif
+#endif
 #if defined(CONFIG_MYIR_OLD_UBOOT) && !defined(CONFIG_MYIR_UBOOT_BACKUP)
-#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00080000
-#else
 #ifdef CONFIG_MYIR_NAND_8G08
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00280000
+#else
+#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00080000
+#endif
 #else
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
 #endif
@@ -675,6 +696,7 @@
 #define CONFIG_CMD_SPL_NAND_OFS	0x00200000 /* os parameters */
 #else
 #define CONFIG_CMD_SPL_NAND_OFS	0x00080000 /* os parameters */
+#endif
 #ifdef CONFIG_MYIR_UBOOT_BACKUP
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00400000 /* kernel offset */
 #else
@@ -685,6 +707,7 @@
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00480000 /* kernel offset */
 #else
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00200000 /* kernel offset */
+#endif
 #endif
 #endif
 #define CONFIG_CMD_SPL_WRITE_SIZE	0x2000
