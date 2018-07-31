@@ -20,40 +20,39 @@
 #include <linux/sizes.h>
 
 const struct ctrl_ioregs ioregs = {
-	.cm0ioctl		= MT41J128MJT125_IOCTRL_VALUE,
-	.cm1ioctl		= MT41J128MJT125_IOCTRL_VALUE,
-	.cm2ioctl		= MT41J128MJT125_IOCTRL_VALUE,
-	.dt0ioctl		= MT41J128MJT125_IOCTRL_VALUE,
-	.dt1ioctl		= MT41J128MJT125_IOCTRL_VALUE,
+	.cm0ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.cm1ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.cm2ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.dt0ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.dt1ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
 };
 
 static const struct ddr_data ddr3_data = {
-	.datardsratio0		= MT41J128MJT125_RD_DQS_400MHz,
-	.datawdsratio0		= MT41J128MJT125_WR_DQS_400MHz,
-	.datafwsratio0		= MT41J128MJT125_PHY_FIFO_WE_400MHz,
-	.datawrsratio0		= MT41J128MJT125_PHY_WR_DATA_400MHz,
+	.datardsratio0		= MT41K256M16HA125E_RD_DQS,
+	.datawdsratio0		= MT41K256M16HA125E_WR_DQS,
+	.datafwsratio0		= MT41K256M16HA125E_PHY_FIFO_WE,
+	.datawrsratio0		= MT41K256M16HA125E_PHY_WR_DATA,
 };
 
 static const struct cmd_control ddr3_cmd_ctrl_data = {
-	.cmd0csratio		= MT41J128MJT125_RATIO_400MHz,
-	.cmd0iclkout		= MT41J128MJT125_INVERT_CLKOUT_400MHz,
+	.cmd0csratio = MT41K256M16HA125E_RATIO,
+	.cmd0iclkout = MT41K256M16HA125E_INVERT_CLKOUT,
 
-	.cmd1csratio		= MT41J128MJT125_RATIO_400MHz,
-	.cmd1iclkout		= MT41J128MJT125_INVERT_CLKOUT_400MHz,
+	.cmd1csratio = MT41K256M16HA125E_RATIO,
+	.cmd1iclkout = MT41K256M16HA125E_INVERT_CLKOUT,
 
-	.cmd2csratio		= MT41J128MJT125_RATIO_400MHz,
-	.cmd2iclkout		= MT41J128MJT125_INVERT_CLKOUT_400MHz,
+	.cmd2csratio = MT41K256M16HA125E_RATIO,
+	.cmd2iclkout = MT41K256M16HA125E_INVERT_CLKOUT,
 };
 
 static struct emif_regs ddr3_emif_reg_data = {
-	.sdram_config		= MT41J128MJT125_EMIF_SDCFG_400MHz,
-	.ref_ctrl		= MT41J128MJT125_EMIF_SDREF_400MHz,
-	.sdram_tim1		= MT41J128MJT125_EMIF_TIM1_400MHz,
-	.sdram_tim2		= MT41J128MJT125_EMIF_TIM2_400MHz,
-	.sdram_tim3		= MT41J128MJT125_EMIF_TIM3_400MHz,
-	.zq_config		= MT41J128MJT125_ZQ_CFG_400MHz,
-	.emif_ddr_phy_ctlr_1	= MT41J128MJT125_EMIF_READ_LATENCY_400MHz|
-					PHY_EN_DYN_PWRDN,
+	.sdram_config = MT41K256M16HA125E_EMIF_SDCFG,
+	.ref_ctrl = MT41K256M16HA125E_EMIF_SDREF,
+	.sdram_tim1 = MT41K256M16HA125E_EMIF_TIM1,
+	.sdram_tim2 = MT41K256M16HA125E_EMIF_TIM2,
+	.sdram_tim3 = MT41K256M16HA125E_EMIF_TIM3,
+	.zq_config = MT41K256M16HA125E_ZQ_CFG,
+	.emif_ddr_phy_ctlr_1 = MT41K256M16HA125E_EMIF_READ_LATENCY,
 };
 
 const struct dpll_params dpll_ddr = {
@@ -83,11 +82,10 @@ static void probe_sdram_size(long size)
 {
 	switch (size) {
 	case SZ_512M:
-		ddr3_emif_reg_data.sdram_config = MT41J256MJT125_EMIF_SDCFG;
+		ddr3_emif_reg_data.sdram_config = MT41K256M16HA125E_EMIF_SDCFG;
 		break;
 	case SZ_256M:
-//		ddr3_emif_reg_data.sdram_config = MT41J128MJT125_EMIF_SDCFG;
-		ddr3_emif_reg_data.sdram_config = MT41J128MJT125_EMIF_SDCFG_400MHz;
+		ddr3_emif_reg_data.sdram_config = MT41J128MJT125_EMIF_SDCFG;
 		break;
 	case SZ_128M:
 		ddr3_emif_reg_data.sdram_config = MT41J64MJT125_EMIF_SDCFG;
