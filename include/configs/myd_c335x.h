@@ -79,17 +79,17 @@
 				"nand erase.part NAND.SPL; " \
 				"nand write ${loadaddr} 0 ${filesize};" \
 				"nand erase.part NAND.SPL.backup1; " \
-				"nand write ${loadaddr} 0x20000 ${filesize};" \
+				"nand write ${loadaddr} NAND.SPL.backup1 ${filesize};" \
 				"nand erase.part NAND.SPL.backup2; " \
-				"nand write ${loadaddr} 0x40000 ${filesize};" \
+				"nand write ${loadaddr} NAND.SPL.backup2 ${filesize};" \
 				"nand erase.part NAND.SPL.backup3; " \
-				"nand write ${loadaddr} 0x60000 ${filesize};" \
+				"nand write ${loadaddr} NAND.SPL.backup3 ${filesize};" \
 			"fi;\0"
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define UPDATEUBOOT \
 	"updateuboot=if run loaduboot; then " \
 				"nand erase.part NAND.u-boot;" \
-				"nand write ${loadaddr} 0x80000 ${filesize};" \
+				"nand write ${loadaddr} NAND.u-boot ${filesize};" \
 			"fi;\0" 
 #else
 #define UPDATEUBOOT \
@@ -97,7 +97,7 @@
 				"nand erase.part NAND.u-boot;" \
 				"nand erase.part NAND.u-boot-env;" \
 				"nand erase.part NAND.u-boot-env.backup1;" \
-				"nand write ${loadaddr} 0xc0000 ${filesize};" \
+				"nand write ${loadaddr} NAND.u-boot ${filesize};" \
 			"fi;\0" 
 #endif
 
@@ -107,7 +107,7 @@
 #define UPDATEFDT  \
 	"updatefdt=if run loadfdt; then " \
 				"nand erase.part NAND.u-boot-spl-os;" \
-				"nand write ${fdtaddr} 0x80000 ${filesize};" \
+				"nand write ${fdtaddr} NAND.u-boot-spl-os ${filesize};" \
 			"fi;\0" 
 #endif
 
@@ -115,13 +115,13 @@
 #define UPDATEKERNEL \
 	"updatekernel=if run loadkernel; then " \
 			"nand erase.part NAND.kernel;" \
-			"nand write ${loadaddr} 0x280000 ${filesize};" \
+			"nand write ${loadaddr} NAND.kernel ${filesize};" \
 		"fi; \0" 
 #else
 #define UPDATEKERNEL \
 	"updatekernel=if run loadkernel; then " \
 			"nand erase.part NAND.kernel;" \
-			"nand write ${loadaddr} 0x200000 ${filesize};" \
+			"nand write ${loadaddr} NAND.kernel ${filesize};" \
 		"fi; \0" 
 #endif
 
@@ -129,13 +129,13 @@
 #define UPDATEFILESYSTEM \
 	"updatefilesystem=if run loadrootfs; then " \
 				"nand erase.part NAND.rootfs;" \
-				"nand write ${loadaddr} 0x780000 ${filesize};" \
+				"nand write ${loadaddr} NAND.rootfs ${filesize};" \
 			"fi; \0" 
 #else
 #define UPDATEFILESYSTEM \
 	"updatefilesystem=if run loadrootfs; then " \
 				"nand erase.part NAND.rootfs;" \
-				"nand write ${loadaddr} 0xa00000 ${filesize};" \
+				"nand write ${loadaddr} NAND.rootfs ${filesize};" \
 			"fi; \0" 
 #endif
 
@@ -188,9 +188,15 @@
 			"echo 'boot success, never run here!'; "\
 		"fi;\0"	
 #endif
+#ifdef CONFIG_MYIR_NAND_8G08
+#define NANDROOT \
+	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,4096\0" \
+	"nandrootfstype=ubifs rootwait=1\0" 
+#else
 #define NANDROOT \
 	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048\0" \
 	"nandrootfstype=ubifs rootwait=1\0" 
+#endif
 #define NANDARGS  \
 	LOADMLO \
 	LOADUBOOT \
@@ -441,6 +447,30 @@
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE
 #define CONFIG_SYS_NAND_PAGE_COUNT	(CONFIG_SYS_NAND_BLOCK_SIZE / \
 					 CONFIG_SYS_NAND_PAGE_SIZE)
+#ifdef CONFIG_MYIR_NAND_8G08
+#define CONFIG_SYS_NAND_PAGE_SIZE	4096
+#define CONFIG_SYS_NAND_OOBSIZE		224
+#define CONFIG_SYS_NAND_BLOCK_SIZE	(512*1024)
+/* NAND: driver related configs */
+#define CONFIG_NAND_OMAP_GPMC
+#define CONFIG_NAND_OMAP_GPMC_PREFETCH
+#define CONFIG_NAND_OMAP_ELM
+#define CONFIG_SYS_NAND_BAD_BLOCK_POS	NAND_LARGE_BADBLOCK_POS
+#define CONFIG_SYS_NAND_ECCPOS		{ 2, 3, 4, 5, 6, 7, 8, 9, \
+					 10, 11, 12, 13, 14, 15, 16, 17, \
+					 18, 19, 20, 21, 22, 23, 24, 25, \
+					 26, 27, 28, 29, 30, 31, 32, 33, \
+					 34, 35, 36, 37, 38, 39, 40, 41, \
+					 42, 43, 44, 45, 46, 47, 48, 49, \
+					 50, 51, 52, 53, 54, 55, 56, 57, \
+					 58, 59, 60, 61, 62, 63, 64, 65, \
+					 66, 67, 68, 69, 70, 71, 72, 73, \
+					 74, 75, 76, 77, 78, 79, 80, 81, \
+					 82, 83, 84, 85, 86, 87, 88, 89, \
+					 90, 91, 92, 93, 94, 95, 96, 97, \
+					 98, 99, 100, 101, 102, 103, 104, 105, \
+					 106, 107, 108, 109, 110, 111, 112, 113}
+#else
 #define CONFIG_SYS_NAND_PAGE_SIZE	2048
 #define CONFIG_SYS_NAND_OOBSIZE		64
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(128*1024)
@@ -456,7 +486,7 @@
 					 34, 35, 36, 37, 38, 39, 40, 41, \
 					 42, 43, 44, 45, 46, 47, 48, 49, \
 					 50, 51, 52, 53, 54, 55, 56, 57, }
-
+#endif
 #define CONFIG_SYS_NAND_ECCSIZE		512
 #define CONFIG_SYS_NAND_ECCBYTES	14
 #define CONFIG_SYS_NAND_ONFI_DETECTION
@@ -474,6 +504,20 @@
 					"5120k(NAND.kernel)," \
 					"-(NAND.rootfs)"
 #else
+#ifdef CONFIG_MYIR_NAND_8G08
+#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+					"512k(NAND.SPL)," \
+					"512k(NAND.SPL.backup1)," \
+					"512k(NAND.SPL.backup2)," \
+					"512k(NAND.SPL.backup3)," \
+					"512k(NAND.u-boot-spl-os)," \
+					"1m(NAND.u-boot)," \
+					"512k(NAND.u-boot-env)," \
+					"512k(NAND.u-boot-env.backup1)," \
+					"8m(NAND.kernel)," \
+					"214m(NAND.rootfs)," \
+					"-(NAND.userdata)"
+#else
 #define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
@@ -487,10 +531,15 @@
 					"214m(NAND.rootfs)," \
 					"-(NAND.userdata)"
 #endif
+#endif
 #if defined(CONFIG_MYIR_OLD_UBOOT)
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00080000
 #else
+#ifdef CONFIG_MYIR_NAND_8G08
+#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00280000
+#else
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
+#endif
 #endif
 
 /* NAND: SPL related configs */
@@ -498,13 +547,22 @@
 #define CONFIG_SPL_NAND_AM33XX_BCH
 #endif
 #ifdef CONFIG_SPL_OS_BOOT
+#ifdef CONFIG_MYIR_NAND_8G08
+#define CONFIG_CMD_SPL_NAND_OFS	0x00200000 /* os parameters */
+#else
 #define CONFIG_CMD_SPL_NAND_OFS	0x00080000 /* os parameters */
+#endif
+
 #if defined(CONFIG_MYIR_OLD_UBOOT)
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00280000 /* kernel offset */
 #else
+#ifdef CONFIG_MYIR_NAND_8G08
+#define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00480000 /* kernel offset */
+#else
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00200000 /* kernel offset */
 #endif
-#define CONFIG_CMD_SPL_WRITE_SIZE	0x2000
+#endif
+#define CONFIG_CMD_SPL_WRITE_SIZE	CONFIG_SYS_NAND_BLOCK_SIZE
 #endif
 #endif /* !CONFIG_NAND */
 
@@ -614,8 +672,13 @@
 					"128k(u-boot-env2)," \
 					"4m(kernel),-(rootfs)"
 #elif defined(CONFIG_ENV_IS_IN_NAND)
+#ifdef CONFIG_MYIR_NAND_8G08
+#define CONFIG_ENV_OFFSET		0x00380000
+#define CONFIG_ENV_OFFSET_REDUND	0x00400000
+#else
 #define CONFIG_ENV_OFFSET		0x001c0000
 #define CONFIG_ENV_OFFSET_REDUND	0x001e0000
+#endif
 #define CONFIG_SYS_ENV_SECT_SIZE	CONFIG_SYS_NAND_BLOCK_SIZE
 #elif !defined(CONFIG_ENV_IS_NOWHERE)
 /* Not NAND, SPI, NOR or eMMC env, so put ENV in a file on FAT */
