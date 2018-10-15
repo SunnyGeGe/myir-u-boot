@@ -976,11 +976,15 @@ static int cpsw_phy_init(struct cpsw_priv *priv, struct cpsw_slave *slave)
 
 	if (!phydev){
 		if(slave->data->phy_addr == 0x04){
+#ifdef CONFIG_TARGET_MYD_C335X
 			int wdi = 32*3+19;
+#else
+			int wdi = 32*3+8;
+#endif
 			gpio_request(wdi, "WDI");
 			gpio_direction_output(wdi, 0);
 			gpio_set_value(wdi,0);
-			mdelay(500);
+			mdelay(1500);
 		}
 		return -1;
 	}
