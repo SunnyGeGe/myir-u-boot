@@ -34,6 +34,7 @@
 #define CM_RTC				0x44E00800
 
 #define PRM_RSTCTRL			(PRCM_BASE + 0x0F00)
+#define PRM_RSTTIME			(PRM_RSTCTRL + 4)
 #define PRM_RSTST			(PRM_RSTCTRL + 8)
 
 /* VTP Base address */

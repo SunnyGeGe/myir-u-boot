@@ -16,7 +16,14 @@
 
 void __weak reset_cpu(unsigned long ignored)
 {
-	writel(PRM_RSTCTRL_RESET, PRM_RSTCTRL);
+		writel(0xFFFFFFFF, PRM_RSTTIME);
+	if(ignored == 0){
+		writel(PRM_RSTCTRL_RESET<<1, PRM_RSTCTRL);
+		}
+	else
+		{
+		writel(PRM_RSTCTRL_RESET, PRM_RSTCTRL);
+		}
 }
 
 u32 __weak warm_reset(void)
