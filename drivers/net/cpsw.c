@@ -975,19 +975,7 @@ static int cpsw_phy_init(struct cpsw_priv *priv, struct cpsw_slave *slave)
 			slave->data->phy_if);
 
 	if (!phydev){
-//		if(slave->data->phy_addr == 0x04){
-//#ifdef CONFIG_TARGET_MYD_C335X
-//			int wdi = 32*3+19;
-//            reset_cpu(0);
-//
-//#else
-//			int wdi = 32*3+8;
-//#endif
-//			gpio_request(wdi, "WDI");
-//			gpio_direction_output(wdi, 0);
-//			gpio_set_value(wdi,0);
-//			mdelay(1500);
-//		}
+
 		return -1;
 	}
 
@@ -1040,7 +1028,19 @@ int _cpsw_register(struct cpsw_priv *priv)
 		}
 	}
 
-	if(phy_connected == 0){
+	if(phy_connected == 0){ 	
+			printf("======\r\n");
+#ifdef CONFIG_TARGET_MYD_C335X
+			int wdi = 32*3+19;
+#else
+			int wdi = 32*3+8;
+#endif
+			gpio_request(wdi, "WDI");
+			gpio_direction_output(wdi, 0);
+			gpio_set_value(wdi,0);
+			mdelay(1800);
+			
+			printf("------\r\n");
 			reset_cpu(0);   // no one phy connected
 	}
 
