@@ -44,7 +44,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define GPIO_PR1_MII_CTRL	GPIO_TO_PIN(3, 4)
 #define GPIO_MUX_MII_CTRL	GPIO_TO_PIN(3, 10)
 #define GPIO_FET_SWITCH_CTRL	GPIO_TO_PIN(0, 7)
-#define GPIO_PHY_RESET		GPIO_TO_PIN(2, 5)
+#define GPIO_PHY_RESET		GPIO_TO_PIN(3, 7)
 #define GPIO_ETH0_MODE		GPIO_TO_PIN(0, 11)
 #define GPIO_ETH1_MODE		GPIO_TO_PIN(1, 26)
 
@@ -66,6 +66,32 @@ struct serial_device *default_serial_console(void)
 }
 #endif
 
+static void request_and_set_gpio(int gpio, char *name, int val)
+{
+	int ret;
+
+	ret = gpio_request(gpio, name);
+	if (ret < 0) {
+		printf("%s: Unable to request %s\n", __func__, name);
+		return;
+	}
+
+	ret = gpio_direction_output(gpio, 0);
+	if (ret < 0) {
+		printf("%s: Unable to set %s  as output\n", __func__, name);
+		goto err_free_gpio;
+	}
+
+	gpio_set_value(gpio, val);
+
+	return;
+
+err_free_gpio:
+	gpio_free(gpio);
+}
+
+#define REQUEST_AND_SET_GPIO(N)	request_and_set_gpio(N, #N, 1);
+#define REQUEST_AND_CLR_GPIO(N)	request_and_set_gpio(N, #N, 0);
 /*
  * Basic board specific setup.  Pinmux has been handled already.
  */
@@ -79,7 +105,13 @@ int board_init(void)
 #if defined(CONFIG_STATUS_LED) && defined(STATUS_LED_BOOT)
 	status_led_set(STATUS_LED_BOOT, STATUS_LED_OFF);
 #endif
-	return 0;
+    gpio_request(GPIO_PHY_RESET, "PHY_RESET");
+    gpio_direction_output(GPIO_PHY_RESET, 0);
+/* reset PHYs */
+    gpio_set_value(GPIO_PHY_RESET, 0);
+    mdelay(20);	/* PHY datasheet states 1uS min. */
+    gpio_set_value(GPIO_PHY_RESET, 1);		
+    return 0;
 }
 
 #if defined (CONFIG_DRIVER_TI_CPSW) && !defined(CONFIG_SPL_BUILD)
