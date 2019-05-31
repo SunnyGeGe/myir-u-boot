@@ -16,7 +16,7 @@
 
 void __weak reset_cpu(unsigned long ignored)
 {
-		writel(0xFFFFFFFF, PRM_RSTTIME);
+//		writel(0xFFFFFFFF, PRM_RSTTIME);
 	if(ignored == 0){
 		writel(PRM_RSTCTRL_RESET<<1, PRM_RSTCTRL);
 		}
