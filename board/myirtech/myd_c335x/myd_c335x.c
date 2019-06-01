@@ -75,6 +75,9 @@ int board_init(void)
 #if defined(CONFIG_NOR) || defined(CONFIG_NAND)
 	gpmc_init();
 #endif
+    writel(0x84800000, 0x4c000104);
+    writel(0x00000000, 0x4c000054);
+
 
 #if defined(CONFIG_STATUS_LED) && defined(STATUS_LED_BOOT)
 	status_led_set(STATUS_LED_BOOT, STATUS_LED_OFF);
@@ -224,6 +227,8 @@ int board_eth_init(bd_t *bis)
 	int rv, n = 0;
 	const char *devname;
 	struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
+	writel(0xc00000, &cdev->init_priority_1);
+	writel(0x44444477, &cdev->mreqprio_0);
 
 	rv = handle_mac0_address();
 	if (rv)
