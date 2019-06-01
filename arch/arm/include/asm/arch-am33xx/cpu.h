@@ -519,7 +519,10 @@ struct ctrl_stat {
 
 struct ctrl_dev {
 	unsigned int deviceid;		/* offset 0x00 */
-	unsigned int resv1[7];
+	unsigned int devfeature;		/* offset 0x04 */
+	unsigned int init_priority_0;		/* offset 0x08 */
+	unsigned int init_priority_1;		/* offset 0x0c */
+	unsigned int resv1[4];
 	unsigned int usb_ctrl0;		/* offset 0x20 */
 	unsigned int resv2;
 	unsigned int usb_ctrl1;		/* offset 0x28 */
