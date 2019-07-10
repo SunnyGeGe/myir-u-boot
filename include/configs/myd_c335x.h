@@ -103,11 +103,11 @@
 #define UPDATEUBOOT \
 	"updateuboot=if run loaduboot; then " \
 				"nand erase.part NAND.u-boot;" \
-				"nand write ${loadaddr} 0xc0000 ${filesize};" \
+				"nand write ${loadaddr} NAND.u-boot ${filesize};" \
 				"nand erase.part NAND.u-boot.backup1;" \
-				"nand write ${loadaddr} 0x200000 ${filesize};" \
+				"nand write ${loadaddr} NAND.u-boot.backup1 ${filesize};" \
 				"nand erase.part NAND.u-boot.backup2;" \
-				"nand write ${loadaddr} 0x300000 ${filesize};" \
+				"nand write ${loadaddr} NAND.u-boot.backup2 ${filesize};" \
 				"nand erase.part NAND.u-boot-env;" \
 				"nand erase.part NAND.u-boot-env.backup1;" \
 			"fi;\0" 
@@ -143,9 +143,9 @@
 #define UPDATEKERNEL \
 	"updatekernel=if run loadkernel; then " \
 				"nand erase.part NAND.kernel;" \
-				"nand write ${loadaddr} 0x400000 ${filesize};" \
+				"nand write ${loadaddr} NAND.kernel ${filesize};" \
 				"nand erase.part NAND.kernel.backup1;" \
-				"nand write ${loadaddr} 0xc00000 ${filesize};" \
+				"nand write ${loadaddr} NAND.kernel.backup1 ${filesize};" \
 			"fi; \0" 
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
@@ -167,7 +167,7 @@
 #define  UPDATERECOVERY \
 	"updaterecovery=if run loadrecovery; then " \
 	"nand erase.part NAND.recovery;" \
-	"nand write ${loadaddr} 0x1400000 ${filesize};" \
+	"nand write ${loadaddr} NAND.recovery ${filesize};" \
 	"fi; \0"
 #else
 #define UPDATERECOVERY "updaterecovery=echo 'no uboot backup partitions.'; \0"
@@ -177,9 +177,9 @@
 #define UPDATEFILESYSTEM \
 	"updatefilesystem=if run loadrootfs; then " \
 				"nand erase.part NAND.rootfs;" \
-				"nand write ${loadaddr} 0x3400000 ${filesize};" \
+				"nand write ${loadaddr} NAND.rootfs ${filesize};" \
 				"nand erase.part NAND.rootfs.backup1;" \
-				"nand write ${loadaddr} 0x7400000 ${filesize};" \
+				"nand write ${loadaddr} NAND.rootfs.backup1 ${filesize};" \
 			"fi; \0" 
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
@@ -309,9 +309,15 @@
 		"fi;\0"	
 #endif
 #endif
+#ifdef CONFIG_MYIR_NAND_8G08
+#define NANDROOT \
+	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,4096\0" \
+	"nandrootfstype=ubifs rootwait=1\0" 
+#else
 #define NANDROOT \
 	"nandroot=ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048\0" \
 	"nandrootfstype=ubifs rootwait=1\0" 
+#endif
 #define NANDARGS  \
 	LOADMLO \
 	LOADUBOOT \
@@ -632,6 +638,9 @@
 					"64m(NAND.rootfs)," \
 					"64m(NAND.rootfs.backup1)," \
 					"-(NAND.userdata)"
+#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
+#define CONFIG_SYS_NAND_U_BOOT1_OFFS	0x00200000
+#define CONFIG_SYS_NAND_U_BOOT2_OFFS	0x00300000
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
@@ -672,19 +681,15 @@
 					"-(NAND.userdata)"
 #endif
 #endif
-#endif
-#if defined(CONFIG_MYIR_OLD_UBOOT) && !defined(CONFIG_MYIR_UBOOT_BACKUP)
+#if defined(CONFIG_MYIR_OLD_UBOOT)
+#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00080000
+#else
 #ifdef CONFIG_MYIR_NAND_8G08
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00280000
 #else
-#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x00080000
-#endif
-#else
 #define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
 #endif
-#ifdef CONFIG_MYIR_UBOOT_BACKUP
-#define CONFIG_SYS_NAND_U_BOOT1_OFFS	0x00200000
-#define CONFIG_SYS_NAND_U_BOOT2_OFFS	0x00300000
+#endif
 #endif
 
 /* NAND: SPL related configs */
@@ -697,20 +702,21 @@
 #else
 #define CONFIG_CMD_SPL_NAND_OFS	0x00080000 /* os parameters */
 #endif
-#ifdef CONFIG_MYIR_UBOOT_BACKUP
-#define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00400000 /* kernel offset */
-#else
+
 #if defined(CONFIG_MYIR_OLD_UBOOT)
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00280000 /* kernel offset */
 #else
 #ifdef CONFIG_MYIR_NAND_8G08
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00480000 /* kernel offset */
 #else
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+#define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00400000 /* kernel offset */
+#else
 #define CONFIG_SYS_NAND_SPL_KERNEL_OFFS	0x00200000 /* kernel offset */
 #endif
 #endif
 #endif
-#define CONFIG_CMD_SPL_WRITE_SIZE	0x2000
+#define CONFIG_CMD_SPL_WRITE_SIZE	CONFIG_SYS_NAND_BLOCK_SIZE
 #endif
 #endif /* !CONFIG_NAND */
 
