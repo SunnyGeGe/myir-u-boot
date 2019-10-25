@@ -276,7 +276,7 @@
 					"fi; " \
 				"fi; "	\
 			"fi; \0"
-/* rootfsid 0/null: normal  1: backup1 */
+/* rootfsid 0/null: normal  1: backup1 2: recovery(all corrupted)*/
 #define CHECKROOTFS "checkrootfs=if ubi part NAND.rootfs 2048; then " \
 					"if ubifsmount ubi0:rootfs; then " \
 			               		"setenv rootfsid 0; " \
@@ -287,6 +287,15 @@
 			                "setenv rootfsid 1; " \
 				"fi; " \
 			"if test -n $rootfsid && test ${rootfsid} = 1; then " \
+				"if ubi part NAND.rootfs.backup1 2048; then " \
+					"if ubifsmount ubi0:rootfs; then " \
+						"echo 'try booting from NAND.rootfs.backup1'; " \
+					"else; " \
+						"setenv rootfsid 2; setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
+					"fi; " \
+				"else; "\
+					"setenv rootfsid 2; setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
+				"fi; " \
 		    		"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
 			"else; " \
 		    		"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
