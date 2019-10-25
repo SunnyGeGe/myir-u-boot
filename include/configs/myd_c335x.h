@@ -273,7 +273,20 @@
 				"fi; "	\
 			"fi; \0"
 /* rootfsid 0/null: normal  1: backup1 */
-#define CHECKROOTFS "checkrootfs=if test -n $rootfsid && test ${rootfsid} = 1; then setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; fi; \0"
+#define CHECKROOTFS "checkrootfs=if ubi part NAND.rootfs 2048; then " \
+					"if ubifsmount ubi0:rootfs; then " \
+			               		"setenv rootfsid 0; " \
+			        	"else; " \
+			                	"setenv rootfsid 1; " \
+			        	"fi; " \
+				"else; " \
+			                "setenv rootfsid 1; " \
+				"fi; " \
+			"if test -n $rootfsid && test ${rootfsid} = 1; then " \
+		    		"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+			"else; " \
+		    		"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
+			"fi; saveenv; saveenv; \0"
 #else
 #define CHECKUBOOT "checkuboot=echo 'no uboot backup partitions.';\0"
 #define CHECKRECOVERY "checkrecovery=echo 'check no recovery partitions.'; \0"
