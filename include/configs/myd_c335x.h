@@ -269,7 +269,11 @@
 					"nand read ${loadaddr} NAND.kernel; " \
 					"nand write ${loadaddr} NAND.kernel.backup1 0x800000; " \
 					"setenv kernelid 1; " \
-					"bootm ${loadaddr};" \
+					"if bootm ${loadaddr}; then " \
+						"echo 'boot success, never run here!'; "\
+					"else; " \
+						"setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
+					"fi; " \
 				"fi; "	\
 			"fi; \0"
 /* rootfsid 0/null: normal  1: backup1 */
