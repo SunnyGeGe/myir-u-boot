@@ -268,38 +268,99 @@
 					"nand erase.part NAND.kernel.backup1; "\
 					"nand read ${loadaddr} NAND.kernel; " \
 					"nand write ${loadaddr} NAND.kernel.backup1 0x800000; " \
-					"setenv kernelid 1; " \
+					"setenv kernelid 0; saveenv; saveenv;" \
 					"if bootm ${loadaddr}; then " \
 						"echo 'boot success, never run here!'; "\
 					"else; " \
 						"setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
 					"fi; " \
 				"fi; "	\
-			"fi; \0"
-/* rootfsid 0/null: normal  1: backup1 2: recovery(all corrupted)*/
-#define CHECKROOTFS "checkrootfs=if ubi part NAND.rootfs 2048; then " \
-					"if ubifsmount ubi0:rootfs; then " \
-			               		"setenv rootfsid 0; " \
-			        	"else; " \
-			                	"setenv rootfsid 1; " \
-			        	"fi; " \
-				"else; " \
-			                "setenv rootfsid 1; " \
-				"fi; " \
-			"if test -n $rootfsid && test ${rootfsid} = 1; then " \
-				"if ubi part NAND.rootfs.backup1 2048; then " \
-					"if ubifsmount ubi0:rootfs; then " \
-						"echo 'try booting from NAND.rootfs.backup1'; " \
-					"else; " \
-						"setenv rootfsid 2; setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
-					"fi; " \
-				"else; "\
-					"setenv rootfsid 2; setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
-				"fi; " \
-		    		"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+			"fi; " \
+			"setenv kernelid 0; saveenv; saveenv;" \
+			"nand read ${loadaddr} NAND.kernel; " \
+			"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
+			"if bootm ${loadaddr}; then " \
+				"echo 'boot success, never run here!'; "\
 			"else; " \
-		    		"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
-			"fi; saveenv; saveenv; \0"
+				"echo 'NAND.kernel error, try NAND.kernel.backup1'; "\
+				"nand erase.part NAND.kernel; "\
+				"nand read ${loadaddr} NAND.kernel.backup1; " \
+				"nand write ${loadaddr} NAND.kernel 0x800000; " \
+				"setenv kernelid 1; saveenv; saveenv;" \
+				"if bootm ${loadaddr}; then " \
+					"echo 'boot success, never run here!'; "\
+				"else; " \
+					"setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
+				"fi; " \
+			"fi; \0"	
+
+/* rootfsid 0/null: normal  1: backup1 2: recovery(all corrupted)*/
+#define CHECKROOTFS "checkrootfs=if test -n $rootfsid; then " \
+					"echo 'rootfsid='$rootfsid; " \
+				"else; " \
+					"echo 'rootfsid not defined, set to 0 as default'; setenv rootfsid 0; " \
+				"fi; " \
+       				 "if test ${rootfsid} = 0; then " \
+					"if ubi part NAND.rootfs 2048; then " \
+						"if ubifsmount ubi0:rootfs; then " \
+			               			"setenv rootfsid 0; " \
+		    					"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
+			        		"else; " \
+			                		"setenv rootfsid 1; " \
+							"if ubi part NAND.rootfs.backup1 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+						"fi; " \
+					"else; " \
+			               			"setenv rootfsid 1; " \
+							"if ubi part NAND.rootfs.backup1 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+					"fi; " \
+				"fi; " \
+       				 "if test ${rootfsid} = 1; then " \
+					"if ubi part NAND.rootfs.backup1 2048; then " \
+						"if ubifsmount ubi0:rootfs; then " \
+			               			"setenv rootfsid 1; " \
+		    					"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+			        		"else; " \
+			                		"setenv rootfsid 0; " \
+							"if ubi part NAND.rootfs 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+						"fi; " \
+					"else; " \
+			               			"setenv rootfsid 0; " \
+							"if ubi part NAND.rootfs 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+					"fi; " \
+				"fi; " \
+			"saveenv; saveenv; \0"
 #else
 #define CHECKUBOOT "checkuboot=echo 'no uboot backup partitions.';\0"
 #define CHECKRECOVERY "checkrecovery=echo 'check no recovery partitions.'; \0"
@@ -313,20 +374,7 @@
 		"run checkrecovery; " \
 		"run checkrootfs; " \
 		"run nandargs; " \
-		"run checkkernel;" \
-		"nand read ${loadaddr} NAND.kernel; " \
-		"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
-		"if bootm ${loadaddr}; then " \
-			"echo 'boot success, never run here!'; "\
-		"else; " \
-			"echo 'NAND.kernel error, try NAND.kernel.backup1'; "\
-			"nand erase.part NAND.kernel; " \
-			"nand read ${loadaddr} NAND.kernel.backup1; " \
-			"nand write ${loadaddr} NAND.kernel 0x800000; " \
-			"setenv kernelid 0; " \
-			"bootm ${loadaddr};" \
-		"fi; \0"
-
+		"run checkkernel; \0"
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define NANDBOOTCMD \
