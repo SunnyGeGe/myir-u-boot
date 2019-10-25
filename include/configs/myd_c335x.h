@@ -61,6 +61,11 @@
 #define CONFIG_PHY_ATHEROS
 
 #ifdef CONFIG_NAND
+#define CONFIG_RBTREE 1
+#define CONFIG_MTD 1
+#define CONFIG_MTD_PARTITIONS 1
+#define CONFIG_CMD_UBI 1
+#define CONFIG_CMD_UBIFS 1
 #define LOADMLO \
 	"loadmlo=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/MLO\0" 
 #define LOADUBOOT \
@@ -235,19 +240,20 @@
 					"nand erase.part NAND.u-boot;" \
 					"nand erase.part NAND.u-boot.backup1;" \
 					"nand read ${loadaddr} NAND.u-boot.backup2; " \
-					"nand write ${loadaddr} 0xc0000 0x100000; " \
-					"nand write ${loadaddr} 0x200000 0x100000; " \
+					"nand write ${loadaddr} NAND.u-boot 0x100000; " \
+					"nand write ${loadaddr} NAND.u-boot.backup1 0x100000; " \
 				"else; " \
 					"if test ${ubootid} = 1; then " \
 						"nand erase.part NAND.u-boot;" \
 						"nand read ${loadaddr} NAND.u-boot.backup1; " \
-						"nand write ${loadaddr} 0xc0000 0x100000; " \
+						"nand write ${loadaddr} NAND.u-boot 0x100000; " \
 					"fi;" \
 				"fi;\0" 
 
 /* recoveryid  0/null: normal  1: update  2: reset2factory */				
 #define CHECKRECOVERY "checkrecovery=if test -n $recoveryid && test ${recoveryid} != 0; then " \
 					"nand read ${loadaddr}  NAND.recovery; " \
+					"setenv optargs recoveryid=${recoveryid}; " \
 					"run ramargs; " \
 					"bootm  ${loadaddr}; " \
 				"fi;\0" 
@@ -259,7 +265,10 @@
 					"echo 'boot success, never run here!'; "\
 				"else; " \
 					"echo 'NAND.kernel.backup1 error, try NAND.kernel'; "\
+					"nand erase.part NAND.kernel.backup1; "\
 					"nand read ${loadaddr} NAND.kernel; " \
+					"nand write ${loadaddr} NAND.kernel.backup1 0x800000; " \
+					"setenv kernelid 1; " \
 					"bootm ${loadaddr};" \
 				"fi; "	\
 			"fi; \0"
@@ -285,7 +294,10 @@
 			"echo 'boot success, never run here!'; "\
 		"else; " \
 			"echo 'NAND.kernel error, try NAND.kernel.backup1'; "\
+			"nand erase.part NAND.kernel; " \
 			"nand read ${loadaddr} NAND.kernel.backup1; " \
+			"nand write ${loadaddr} NAND.kernel 0x800000; " \
+			"setenv kernelid 0; " \
 			"bootm ${loadaddr};" \
 		"fi; \0"
 
@@ -637,8 +649,9 @@
 					"32m(NAND.recovery)," \
 					"64m(NAND.rootfs)," \
 					"64m(NAND.rootfs.backup1)," \
+					"32m(NAND.overlay)," \
 					"-(NAND.userdata)"
-#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	0x000c0000
 #define CONFIG_SYS_NAND_U_BOOT1_OFFS	0x00200000
 #define CONFIG_SYS_NAND_U_BOOT2_OFFS	0x00300000
 #else
