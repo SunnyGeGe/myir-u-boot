@@ -21,6 +21,8 @@
 
 #include <configs/ti_am335x_common.h>
 
+#define CONFIG_GPIO_MDIO 1
+
 #ifndef CONFIG_SPL_BUILD
 # define CONFIG_TIMESTAMP
 # define CONFIG_LZO
