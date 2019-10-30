@@ -88,6 +88,322 @@ DECLARE_GLOBAL_DATA_PTR;
 #define MDIO_TIMEOUT            100 /* msecs */
 #define CPDMA_TIMEOUT		100 /* msecs */
 
+#ifdef CONFIG_GPIO_MDIO
+
+#define MDIO_READ 2
+#define MDIO_WRITE 1
+
+#define MDIO_C45 (1<<15)
+#define MDIO_C45_ADDR (MDIO_C45 | 0)
+#define MDIO_C45_READ (MDIO_C45 | 3)
+#define MDIO_C45_WRITE (MDIO_C45 | 1)
+
+#define MDIO_SETUP_TIME 10
+#define MDIO_HOLD_TIME 10
+
+/* Minimum MDC period is 400 ns, plus some margin for error.  MDIO_DELAY
+ * is done twice per period.
+ */
+#define MDIO_DELAY 1
+
+/* The PHY may take up to 300 ns to produce data, plus some margin
+ * for error.
+ */
+#define MDIO_READ_DELAY 1
+
+/* Or MII_ADDR_C45 into regnum for read/write on mii_bus to enable the 21 bit
+   IEEE 802.3ae clause 45 addressing mode used by 10GIGE phy chips. */
+#define MII_ADDR_C45 (1<<30)
+
+struct mdiobb_ctrl;
+struct mdiobb_ops {
+//	struct module *owner;
+
+	/* Set the Management Data Clock high if level is one,
+	 * low if level is zero.
+	 */
+	void (*set_mdc)(struct mdiobb_ctrl *ctrl, int level);
+
+	/* Configure the Management Data I/O pin as an input if
+	 * "output" is zero, or an output if "output" is one.
+	 */
+	void (*set_mdio_dir)(struct mdiobb_ctrl *ctrl, int output);
+
+	/* Set the Management Data I/O pin high if value is one,
+	 * low if "value" is zero.  This may only be called
+	 * when the MDIO pin is configured as an output.
+	 */
+	void (*set_mdio_data)(struct mdiobb_ctrl *ctrl, int value);
+
+	/* Retrieve the state Management Data I/O pin. */
+	int (*get_mdio_data)(struct mdiobb_ctrl *ctrl);
+};
+
+struct mdiobb_ctrl {
+	const struct mdiobb_ops *ops;
+	/* reset callback */
+	int (*reset)(struct mii_dev *bus);
+};
+/* PHY reset GPIO */
+/* GPIO pin + bank to pin ID mapping */
+#define GPIO_PIN(_bank, _pin)		((_bank << 5) + _pin)
+#define GPIO_MDC		GPIO_PIN(0, 1)
+#define GPIO_MDIO		GPIO_PIN(0, 0)
+#define GPIO_MDO		-1
+
+struct mdio_gpio_info {
+	struct mdiobb_ctrl ctrl;
+	int mdc, mdio, mdo;
+	int mdc_active_low, mdio_active_low, mdo_active_low;
+};
+
+struct mdio_gpio_platform_data {
+	/* GPIO numbers for bus pins */
+	unsigned int mdc;
+	unsigned int mdio;
+	unsigned int mdo;
+
+	bool mdc_active_low;
+	bool mdio_active_low;
+	bool mdo_active_low;
+
+	unsigned int phy_mask;
+	int irqs[PHY_MAX_ADDR];
+	/* reset callback */
+	int (*reset)(struct mii_dev *bus);
+};
+
+/* MDIO must already be configured as output. */
+static void mdiobb_send_bit(struct mdiobb_ctrl *ctrl, int val)
+{
+	const struct mdiobb_ops *ops = ctrl->ops;
+
+	ops->set_mdio_data(ctrl, val);
+	__udelay(MDIO_DELAY);
+	ops->set_mdc(ctrl, 1);
+	__udelay(MDIO_DELAY);
+	ops->set_mdc(ctrl, 0);
+}
+
+/* MDIO must already be configured as input. */
+static int mdiobb_get_bit(struct mdiobb_ctrl *ctrl)
+{
+	const struct mdiobb_ops *ops = ctrl->ops;
+
+	__udelay(MDIO_DELAY);
+	ops->set_mdc(ctrl, 1);
+	__udelay(MDIO_DELAY);
+	ops->set_mdc(ctrl, 0);
+	__udelay(MDIO_DELAY);
+
+	return ops->get_mdio_data(ctrl);
+}
+
+/* MDIO must already be configured as output. */
+static void mdiobb_send_num(struct mdiobb_ctrl *ctrl, u16 val, int bits)
+{
+	int i;
+
+	for (i = bits - 1; i >= 0; i--)
+		mdiobb_send_bit(ctrl, (val >> i) & 1);
+}
+
+/* MDIO must already be configured as input. */
+static u16 mdiobb_get_num(struct mdiobb_ctrl *ctrl, int bits)
+{
+	int i;
+	u16 ret = 0;
+
+	for (i = bits - 1; i >= 0; i--) {
+		ret <<= 1;
+		ret |= mdiobb_get_bit(ctrl);
+	}
+
+	return ret;
+}
+
+/* Utility to send the preamble, address, and
+ * register (common to read and write).
+ */
+static void mdiobb_cmd(struct mdiobb_ctrl *ctrl, int op, u8 phy, u8 reg)
+{
+	const struct mdiobb_ops *ops = ctrl->ops;
+	int i;
+
+	ops->set_mdio_dir(ctrl, 1);
+
+	/*
+	 * Send a 32 bit preamble ('1's) with an extra '1' bit for good
+	 * measure.  The IEEE spec says this is a PHY optional
+	 * requirement.  The AMD 79C874 requires one after power up and
+	 * one after a MII communications error.  This means that we are
+	 * doing more preambles than we need, but it is safer and will be
+	 * much more robust.
+	 */
+
+	for (i = 0; i < 32; i++)
+		mdiobb_send_bit(ctrl, 1);
+
+	/* send the start bit (01) and the read opcode (10) or write (10).
+	   Clause 45 operation uses 00 for the start and 11, 10 for
+	   read/write */
+	mdiobb_send_bit(ctrl, 0);
+	if (op & MDIO_C45)
+		mdiobb_send_bit(ctrl, 0);
+	else
+		mdiobb_send_bit(ctrl, 1);
+	mdiobb_send_bit(ctrl, (op >> 1) & 1);
+	mdiobb_send_bit(ctrl, (op >> 0) & 1);
+
+	mdiobb_send_num(ctrl, phy, 5);
+	mdiobb_send_num(ctrl, reg, 5);
+}
+
+/* In clause 45 mode all commands are prefixed by MDIO_ADDR to specify the
+   lower 16 bits of the 21 bit address. This transfer is done identically to a
+   MDIO_WRITE except for a different code. To enable clause 45 mode or
+   MII_ADDR_C45 into the address. Theoretically clause 45 and normal devices
+   can exist on the same bus. Normal devices should ignore the MDIO_ADDR
+   phase. */
+static int mdiobb_cmd_addr(struct mdiobb_ctrl *ctrl, int phy, u32 addr)
+{
+	unsigned int dev_addr = (addr >> 16) & 0x1F;
+	unsigned int reg = addr & 0xFFFF;
+	mdiobb_cmd(ctrl, MDIO_C45_ADDR, phy, dev_addr);
+
+	/* send the turnaround (10) */
+	mdiobb_send_bit(ctrl, 1);
+	mdiobb_send_bit(ctrl, 0);
+
+	mdiobb_send_num(ctrl, reg, 16);
+
+	ctrl->ops->set_mdio_dir(ctrl, 0);
+	mdiobb_get_bit(ctrl);
+
+	return dev_addr;
+}
+
+static int mdiobb_read(struct mii_dev *bus, int phy, int devad, int reg)//(struct mii_dev *bus, int phy, int reg)
+{
+	struct mdiobb_ctrl *ctrl = bus->priv;
+	int ret, i;
+
+	if (reg & MII_ADDR_C45) {
+		reg = mdiobb_cmd_addr(ctrl, phy, reg);
+		mdiobb_cmd(ctrl, MDIO_C45_READ, phy, reg);
+	} else
+		mdiobb_cmd(ctrl, MDIO_READ, phy, reg);
+
+	ctrl->ops->set_mdio_dir(ctrl, 0);
+
+	/* check the turnaround bit: the PHY should be driving it to zero */
+	if (mdiobb_get_bit(ctrl) != 0) {
+		/* PHY didn't drive TA low -- flush any bits it
+		 * may be trying to send.
+		 */
+		for (i = 0; i < 32; i++)
+			mdiobb_get_bit(ctrl);
+
+		return 0xffff;
+	}
+
+	ret = mdiobb_get_num(ctrl, 16);
+	mdiobb_get_bit(ctrl);
+	return ret;
+}
+
+static int mdiobb_write(struct mii_dev *bus, int phy, int devad, int reg,
+			u16 val)//(struct mii_dev *bus, int phy, int reg, u16 val)
+{
+	struct mdiobb_ctrl *ctrl = bus->priv;
+
+	if (reg & MII_ADDR_C45) {
+		reg = mdiobb_cmd_addr(ctrl, phy, reg);
+		mdiobb_cmd(ctrl, MDIO_C45_WRITE, phy, reg);
+	} else
+		mdiobb_cmd(ctrl, MDIO_WRITE, phy, reg);
+
+	/* send the turnaround (10) */
+	mdiobb_send_bit(ctrl, 1);
+	mdiobb_send_bit(ctrl, 0);
+
+	mdiobb_send_num(ctrl, val, 16);
+
+	ctrl->ops->set_mdio_dir(ctrl, 0);
+	mdiobb_get_bit(ctrl);
+	return 0;
+}
+
+static int mdiobb_reset(struct mii_dev *bus)
+{
+	struct mdiobb_ctrl *ctrl = bus->priv;
+	if (ctrl->reset)
+		ctrl->reset(bus);
+	return 0;
+}
+
+static void mdio_dir(struct mdiobb_ctrl *ctrl, int dir)
+{
+	struct mdio_gpio_info *bitbang =
+		container_of(ctrl, struct mdio_gpio_info, ctrl);
+
+	if (bitbang->mdo>=0) {
+		/* Separate output pin. Always set its value to high
+		 * when changing direction. If direction is input,
+		 * assume the pin serves as pull-up. If direction is
+		 * output, the default value is high.
+		 */
+		gpio_set_value(bitbang->mdo,
+					1 ^ bitbang->mdo_active_low);
+		return;
+	}
+
+	if (dir)
+		gpio_direction_output(bitbang->mdio,
+				      1 ^ bitbang->mdio_active_low);
+	else
+		gpio_direction_input(bitbang->mdio);
+}
+
+static int mdio_get(struct mdiobb_ctrl *ctrl)
+{
+	struct mdio_gpio_info *bitbang =
+		container_of(ctrl, struct mdio_gpio_info, ctrl);
+
+	return gpio_get_value(bitbang->mdio) ^
+		bitbang->mdio_active_low;
+}
+
+static void mdio_set(struct mdiobb_ctrl *ctrl, int what)
+{
+	struct mdio_gpio_info *bitbang =
+		container_of(ctrl, struct mdio_gpio_info, ctrl);
+
+	if (bitbang->mdo>=0)
+		gpio_set_value(bitbang->mdo,
+					what ^ bitbang->mdo_active_low);
+	else
+		gpio_set_value(bitbang->mdio,
+					what ^ bitbang->mdio_active_low);
+}
+
+static void mdc_set(struct mdiobb_ctrl *ctrl, int what)
+{
+	struct mdio_gpio_info *bitbang =
+		container_of(ctrl, struct mdio_gpio_info, ctrl);
+//	printf("mdc_set: %d\n", what);
+	gpio_set_value(bitbang->mdc, what ^ bitbang->mdc_active_low);
+}
+
+static struct mdiobb_ops mdio_gpio_ops = {
+//	.owner = THIS_MODULE,
+	.set_mdc = mdc_set,
+	.set_mdio_dir = mdio_dir,
+	.set_mdio_data = mdio_set,
+	.get_mdio_data = mdio_get,
+};
+
+#else
 struct cpsw_mdio_regs {
 	u32	version;
 	u32	control;
@@ -115,7 +431,7 @@ struct cpsw_mdio_regs {
 #define USERACCESS_DATA		(0xffff)
 	} user[0];
 };
-
+#endif
 struct cpsw_regs {
 	u32	id_ver;
 	u32	control;
@@ -492,7 +808,7 @@ static inline void cpsw_ale_port_state(struct cpsw_priv *priv, int port,
 	tmp |= val & mask;
 	__raw_writel(tmp, priv->ale_regs + offset);
 }
-
+#ifndef CONFIG_GPIO_MDIO
 static struct cpsw_mdio_regs *mdio_regs;
 
 /* wait until hardware is ready for another user access */
@@ -560,11 +876,44 @@ static int cpsw_mdio_write(struct mii_dev *bus, int phy_id, int dev_addr,
 
 	return 0;
 }
+#endif
 
 static void cpsw_mdio_init(const char *name, u32 mdio_base, u32 div)
 {
 	struct mii_dev *bus = mdio_alloc();
+#ifdef CONFIG_GPIO_MDIO
+	struct mdio_gpio_info *bitbang = malloc(sizeof(struct mdio_gpio_info));
+	if (!bitbang)
+		goto out_free_bus;
+	memset(bitbang,0,sizeof(struct mdio_gpio_info));
+	bitbang->ctrl.ops = &mdio_gpio_ops;
+	bitbang->mdc = GPIO_MDC;
+	bitbang->mdc_active_low = 0;
+	bitbang->mdio = GPIO_MDIO;
+	bitbang->mdio_active_low = 0;
+	bitbang->mdo = GPIO_MDO;
+	bitbang->mdo_active_low = 0;
 
+	if(bitbang->mdc>=0){
+		gpio_request(GPIO_MDC, "mdc");
+		gpio_direction_output(GPIO_MDC,1);
+	}
+	if(bitbang->mdio>=0){gpio_request(GPIO_MDIO, "mdio");}
+	if(bitbang->mdo>=0){gpio_request(GPIO_MDC, "mdo");}
+	
+	udelay(1000);
+	
+	bus->read = mdiobb_read;
+	bus->write = mdiobb_write;
+	bus->reset = mdiobb_reset;
+	bus->priv = &bitbang->ctrl;
+	strcpy(bus->name, name);
+
+	mdio_register(bus);
+	
+out_free_bus:
+	mdio_free(bus);
+#else
 	mdio_regs = (struct cpsw_mdio_regs *)mdio_base;
 
 	/* set enable and clock divider */
@@ -585,6 +934,7 @@ static void cpsw_mdio_init(const char *name, u32 mdio_base, u32 div)
 	strcpy(bus->name, name);
 
 	mdio_register(bus);
+#endif
 }
 
 /* Set a self-clearing bit in a register, and wait for it to clear */

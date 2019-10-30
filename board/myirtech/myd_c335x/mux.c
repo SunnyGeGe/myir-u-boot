@@ -77,8 +77,13 @@ static struct module_pin_mux rgmii1_pin_mux[] = {
 	{OFFSET(mii1_rxd2), MODE(2) | RXACTIVE},	/* RGMII1_RD2 */
 	{OFFSET(mii1_rxd1), MODE(2) | RXACTIVE},	/* RGMII1_RD1 */
 	{OFFSET(mii1_rxd0), MODE(2) | RXACTIVE},	/* RGMII1_RD0 */
+#ifdef CONFIG_GPIO_MDIO
+	{OFFSET(mdio_data), MODE(7) | RXACTIVE | SLEWCTRL | PULLUP_EN},/* MDIO_DATA */
+	{OFFSET(mdio_clk), MODE(7) | PULLUP_EN},	/* MDIO_CLK */
+#else
 	{OFFSET(mdio_data), MODE(0) | RXACTIVE | PULLUP_EN},/* MDIO_DATA */
 	{OFFSET(mdio_clk), MODE(0) | PULLUP_EN},	/* MDIO_CLK */
+#endif
 	{-1},
 };
 
