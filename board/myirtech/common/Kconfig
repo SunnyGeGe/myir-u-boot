@@ -17,6 +17,6 @@ config MYIR_NAND_8G08
 
 config MYIR_UBOOT_BACKUP
 	bool "Support u-boot and kernel backup partitions myir dev boards"
-	depends on (!MYIR_OLD_UBOOT) && (!MYIR_NAND_8G08)
+	depends on (!MYIR_NAND_8G08)
 	help 
 	   Backup and restore u-boot and legacy uImage
