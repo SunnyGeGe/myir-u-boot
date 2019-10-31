@@ -75,7 +75,12 @@
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define LOADKERNEL \
 	"loadkernel=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/uImage\0"
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+#define LOADRECOVERY \
+		"loadrecovery=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/recovery.img; \0"
+#else
 #define LOADRECOVERY "loadrecovery=echo 'no recovery partitions.'; \0"
+#endif
 #else
 #ifdef CONFIG_MYIR_UBOOT_BACKUP
 #define LOADKERNEL \
