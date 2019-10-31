@@ -426,8 +426,8 @@
 	"mtdids=" MTDIDS_DEFAULT "\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"nandargs=setenv bootargs console=${console} " \
-		"${optargs} " \
-		"root=${nandroot} " \
+		"${optargs} ${mtdparts} " \
+		" root=${nandroot} " \
 		"rootfstype=${nandrootfstype}\0" \
 	NANDROOT \
 	NANDBOOTCMD
@@ -706,10 +706,10 @@
 #define CONFIG_SYS_NAND_ECCBYTES	14
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 #define CONFIG_NAND_OMAP_ECCSCHEME	OMAP_ECC_BCH8_CODE_HW
-#define MTDIDS_DEFAULT			"nand0=nand.0"
+#define MTDIDS_DEFAULT			"nand0=omap2-nand.0"
 
 #ifdef CONFIG_MYIR_UBOOT_BACKUP
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
 					"128k(NAND.SPL.backup2)," \
@@ -732,7 +732,7 @@
 #define CONFIG_SYS_NAND_U_BOOT2_OFFS	0x00300000
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
 					"128k(NAND.SPL.backup2)," \
@@ -743,7 +743,7 @@
 					"-(NAND.rootfs)"
 #else
 #ifdef CONFIG_MYIR_NAND_8G08
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"512k(NAND.SPL)," \
 					"512k(NAND.SPL.backup1)," \
 					"512k(NAND.SPL.backup2)," \
@@ -756,7 +756,7 @@
 					"214m(NAND.rootfs)," \
 					"-(NAND.userdata)"
 #else
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
 					"128k(NAND.SPL.backup2)," \
