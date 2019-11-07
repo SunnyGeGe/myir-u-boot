@@ -910,6 +910,7 @@ static void cpsw_mdio_init(const char *name, u32 mdio_base, u32 div)
 	strcpy(bus->name, name);
 
 	mdio_register(bus);
+	return;
 	
 out_free_bus:
 	mdio_free(bus);
