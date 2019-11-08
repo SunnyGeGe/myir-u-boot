@@ -21,6 +21,8 @@
 
 #include <configs/ti_am335x_common.h>
 
+#define CONFIG_GPIO_MDIO 1
+
 #ifndef CONFIG_SPL_BUILD
 # define CONFIG_TIMESTAMP
 # define CONFIG_LZO
@@ -61,6 +63,11 @@
 #define CONFIG_PHY_ATHEROS
 
 #ifdef CONFIG_NAND
+#define CONFIG_RBTREE 1
+#define CONFIG_MTD 1
+#define CONFIG_MTD_PARTITIONS 1
+#define CONFIG_CMD_UBI 1
+#define CONFIG_CMD_UBIFS 1
 #define LOADMLO \
 	"loadmlo=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/MLO\0" 
 #define LOADUBOOT \
@@ -68,7 +75,12 @@
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define LOADKERNEL \
 	"loadkernel=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/uImage\0"
+#ifdef CONFIG_MYIR_UBOOT_BACKUP
+#define LOADRECOVERY \
+		"loadrecovery=load ${devtype} ${devnum} ${loadaddr} ${bootdir}/recovery.img; \0"
+#else
 #define LOADRECOVERY "loadrecovery=echo 'no recovery partitions.'; \0"
+#endif
 #else
 #ifdef CONFIG_MYIR_UBOOT_BACKUP
 #define LOADKERNEL \
@@ -235,19 +247,20 @@
 					"nand erase.part NAND.u-boot;" \
 					"nand erase.part NAND.u-boot.backup1;" \
 					"nand read ${loadaddr} NAND.u-boot.backup2; " \
-					"nand write ${loadaddr} 0xc0000 0x100000; " \
-					"nand write ${loadaddr} 0x200000 0x100000; " \
+					"nand write ${loadaddr} NAND.u-boot 0x100000; " \
+					"nand write ${loadaddr} NAND.u-boot.backup1 0x100000; " \
 				"else; " \
 					"if test ${ubootid} = 1; then " \
 						"nand erase.part NAND.u-boot;" \
 						"nand read ${loadaddr} NAND.u-boot.backup1; " \
-						"nand write ${loadaddr} 0xc0000 0x100000; " \
+						"nand write ${loadaddr} NAND.u-boot 0x100000; " \
 					"fi;" \
 				"fi;\0" 
 
 /* recoveryid  0/null: normal  1: update  2: reset2factory */				
 #define CHECKRECOVERY "checkrecovery=if test -n $recoveryid && test ${recoveryid} != 0; then " \
 					"nand read ${loadaddr}  NAND.recovery; " \
+					"setenv optargs recoveryid=${recoveryid}; " \
 					"run ramargs; " \
 					"bootm  ${loadaddr}; " \
 				"fi;\0" 
@@ -259,12 +272,102 @@
 					"echo 'boot success, never run here!'; "\
 				"else; " \
 					"echo 'NAND.kernel.backup1 error, try NAND.kernel'; "\
+					"nand erase.part NAND.kernel.backup1; "\
 					"nand read ${loadaddr} NAND.kernel; " \
-					"bootm ${loadaddr};" \
+					"nand write ${loadaddr} NAND.kernel.backup1 0x800000; " \
+					"setenv kernelid 0; saveenv; saveenv;" \
+					"if bootm ${loadaddr}; then " \
+						"echo 'boot success, never run here!'; "\
+					"else; " \
+						"setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
+					"fi; " \
 				"fi; "	\
-			"fi; \0"
-/* rootfsid 0/null: normal  1: backup1 */
-#define CHECKROOTFS "checkrootfs=if test -n $rootfsid && test ${rootfsid} = 1; then setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; fi; \0"
+			"fi; " \
+			"setenv kernelid 0; saveenv; saveenv;" \
+			"nand read ${loadaddr} NAND.kernel; " \
+			"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
+			"if bootm ${loadaddr}; then " \
+				"echo 'boot success, never run here!'; "\
+			"else; " \
+				"echo 'NAND.kernel error, try NAND.kernel.backup1'; "\
+				"nand erase.part NAND.kernel; "\
+				"nand read ${loadaddr} NAND.kernel.backup1; " \
+				"nand write ${loadaddr} NAND.kernel 0x800000; " \
+				"setenv kernelid 1; saveenv; saveenv;" \
+				"if bootm ${loadaddr}; then " \
+					"echo 'boot success, never run here!'; "\
+				"else; " \
+					"setenv recoveryid 2; saveenv; saveenv; run checkrecovery; " \
+				"fi; " \
+			"fi; \0"	
+
+/* rootfsid 0/null: normal  1: backup1 2: recovery(all corrupted)*/
+#define CHECKROOTFS "checkrootfs=if test -n $rootfsid; then " \
+					"echo 'rootfsid='$rootfsid; " \
+				"else; " \
+					"echo 'rootfsid not defined, set to 0 as default'; setenv rootfsid 0; " \
+				"fi; " \
+       				 "if test ${rootfsid} = 0; then " \
+					"if ubi part NAND.rootfs 2048; then " \
+						"if ubifsmount ubi0:rootfs; then " \
+			               			"setenv rootfsid 0; " \
+		    					"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
+			        		"else; " \
+			                		"setenv rootfsid 1; " \
+							"if ubi part NAND.rootfs.backup1 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+						"fi; " \
+					"else; " \
+			               			"setenv rootfsid 1; " \
+							"if ubi part NAND.rootfs.backup1 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+					"fi; " \
+				"fi; " \
+       				 "if test ${rootfsid} = 1; then " \
+					"if ubi part NAND.rootfs.backup1 2048; then " \
+						"if ubifsmount ubi0:rootfs; then " \
+			               			"setenv rootfsid 1; " \
+		    					"setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs.backup1,2048; " \
+			        		"else; " \
+			                		"setenv rootfsid 0; " \
+							"if ubi part NAND.rootfs 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+						"fi; " \
+					"else; " \
+			               			"setenv rootfsid 0; " \
+							"if ubi part NAND.rootfs 2048; then " \
+								"if ubifsmount ubi0:rootfs; then " \
+		    						  "setenv nandroot ubi0:rootfs rw ubi.mtd=NAND.rootfs,2048; " \
+								"else; " \
+								  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+								"fi; " \
+							"else; " \
+							  "setenv rootfsid 2; setenv recoveryid 2;saveenv;saveenv;run checkrecovery; " \
+							"fi; " \
+					"fi; " \
+				"fi; " \
+			"saveenv; saveenv; \0"
 #else
 #define CHECKUBOOT "checkuboot=echo 'no uboot backup partitions.';\0"
 #define CHECKRECOVERY "checkrecovery=echo 'check no recovery partitions.'; \0"
@@ -278,17 +381,7 @@
 		"run checkrecovery; " \
 		"run checkrootfs; " \
 		"run nandargs; " \
-		"run checkkernel;" \
-		"nand read ${loadaddr} NAND.kernel; " \
-		"nand read ${fdtaddr} NAND.u-boot-spl-os; " \
-		"if bootm ${loadaddr}; then " \
-			"echo 'boot success, never run here!'; "\
-		"else; " \
-			"echo 'NAND.kernel error, try NAND.kernel.backup1'; "\
-			"nand read ${loadaddr} NAND.kernel.backup1; " \
-			"bootm ${loadaddr};" \
-		"fi; \0"
-
+		"run checkkernel; \0"
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
 #define NANDBOOTCMD \
@@ -338,8 +431,8 @@
 	"mtdids=" MTDIDS_DEFAULT "\0" \
 	"mtdparts=" MTDPARTS_DEFAULT "\0" \
 	"nandargs=setenv bootargs console=${console} " \
-		"${optargs} " \
-		"root=${nandroot} " \
+		"${optargs} ${mtdparts} " \
+		" root=${nandroot} " \
 		"rootfstype=${nandrootfstype}\0" \
 	NANDROOT \
 	NANDBOOTCMD
@@ -620,10 +713,10 @@
 #define CONFIG_SYS_NAND_ECCBYTES	14
 #define CONFIG_SYS_NAND_ONFI_DETECTION
 #define CONFIG_NAND_OMAP_ECCSCHEME	OMAP_ECC_BCH8_CODE_HW
-#define MTDIDS_DEFAULT			"nand0=nand.0"
+#define MTDIDS_DEFAULT			"nand0=omap2-nand.0"
 
 #ifdef CONFIG_MYIR_UBOOT_BACKUP
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
 					"128k(NAND.SPL.backup2)," \
@@ -639,13 +732,14 @@
 					"32m(NAND.recovery)," \
 					"64m(NAND.rootfs)," \
 					"64m(NAND.rootfs.backup1)," \
+					"32m(NAND.overlay)," \
 					"-(NAND.userdata)"
-#define CONFIG_SYS_NAND_U_BOOT_OFFS		0x000c0000
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	0x000c0000
 #define CONFIG_SYS_NAND_U_BOOT1_OFFS	0x00200000
 #define CONFIG_SYS_NAND_U_BOOT2_OFFS	0x00300000
 #else
 #ifdef CONFIG_MYIR_OLD_UBOOT
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
 					"128k(NAND.SPL.backup2)," \
@@ -656,7 +750,7 @@
 					"-(NAND.rootfs)"
 #else
 #ifdef CONFIG_MYIR_NAND_8G08
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"512k(NAND.SPL)," \
 					"512k(NAND.SPL.backup1)," \
 					"512k(NAND.SPL.backup2)," \
@@ -669,7 +763,7 @@
 					"214m(NAND.rootfs)," \
 					"-(NAND.userdata)"
 #else
-#define MTDPARTS_DEFAULT		"mtdparts=nand.0:" \
+#define MTDPARTS_DEFAULT		"mtdparts=omap2-nand.0:" \
 					"128k(NAND.SPL)," \
 					"128k(NAND.SPL.backup1)," \
 					"128k(NAND.SPL.backup2)," \

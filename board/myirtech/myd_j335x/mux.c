@@ -78,8 +78,13 @@ static struct module_pin_mux rgmii1_pin_mux[] = {
 	{OFFSET(mii1_rxd2), MODE(2) | RXACTIVE},	/* RGMII1_RD2 */
 	{OFFSET(mii1_rxd1), MODE(2) | RXACTIVE},	/* RGMII1_RD1 */
 	{OFFSET(mii1_rxd0), MODE(2) | RXACTIVE},	/* RGMII1_RD0 */
+#ifdef CONFIG_GPIO_MDIO
+	{OFFSET(mdio_data), MODE(7) | RXACTIVE | SLEWCTRL | PULLUP_EN},/* MDIO_DATA */
+	{OFFSET(mdio_clk), MODE(7) | PULLUP_EN},	/* MDIO_CLK */
+#else
 	{OFFSET(mdio_data), MODE(0) | RXACTIVE | PULLUP_EN},/* MDIO_DATA */
 	{OFFSET(mdio_clk), MODE(0) | PULLUP_EN},	/* MDIO_CLK */
+#endif
 	{-1},
 };
 
@@ -138,8 +143,9 @@ static struct module_pin_mux status_led_pin_mux[] = {
 };
 
 static struct module_pin_mux myd_wdt_pin_mux[] = {
+//	{OFFSET(xdma_event_intr0), (MODE(7) | PULLUP_EN)},      /*LCD_DISP:GPIO0_19 */
 	{OFFSET(emu1), (MODE(7) | PULLUDDIS | RXACTIVE)},	/* GPIO3_8 */
-	{OFFSET(emu0), (MODE(7) | PULLUP_EN)},	/* GPIO3_7 */
+	{OFFSET(emu0), (MODE(7) | PULLUP_EN)},	/* PHY_RST2:GPIO3_7 */
 	{OFFSET(mcasp0_axr0), (MODE(7) | PULLUDDIS | RXACTIVE)},	/* GPIO3_16 */
 	{-1},
 };
