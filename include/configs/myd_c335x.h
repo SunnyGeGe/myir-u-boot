@@ -530,7 +530,7 @@
 	"partitions=" \
 		"uuid_disk=${uuid_gpt_disk};" \
 		"name=rootfs,start=2MiB,size=-,uuid=${uuid_gpt_rootfs}\0" \
-	"optargs=\0" \
+	"optargs=board-am335xevm.display_mode=lcd7ir\0" \
 	"usbroot=/dev/sda2 rw\0" \
 	"usbrootfstype=ext4 rootwait\0" \
 	"usbdev=0\0" \
