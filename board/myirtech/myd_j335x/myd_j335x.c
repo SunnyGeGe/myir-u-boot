@@ -44,7 +44,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #define GPIO_PR1_MII_CTRL	GPIO_TO_PIN(3, 4)
 #define GPIO_MUX_MII_CTRL	GPIO_TO_PIN(3, 10)
 #define GPIO_FET_SWITCH_CTRL	GPIO_TO_PIN(0, 7)
-#define GPIO_PHY_RESET		GPIO_TO_PIN(3, 7)
+#define GPIO_PHY_RST		-1
+#define GPIO_PHY_RST2		GPIO_PIN(3, 7)
 #define GPIO_ETH0_MODE		GPIO_TO_PIN(0, 11)
 #define GPIO_ETH1_MODE		GPIO_TO_PIN(1, 26)
 
@@ -66,32 +67,6 @@ struct serial_device *default_serial_console(void)
 }
 #endif
 
-static void request_and_set_gpio(int gpio, char *name, int val)
-{
-	int ret;
-
-	ret = gpio_request(gpio, name);
-	if (ret < 0) {
-		printf("%s: Unable to request %s\n", __func__, name);
-		return;
-	}
-
-	ret = gpio_direction_output(gpio, 0);
-	if (ret < 0) {
-		printf("%s: Unable to set %s  as output\n", __func__, name);
-		goto err_free_gpio;
-	}
-
-	gpio_set_value(gpio, val);
-
-	return;
-
-err_free_gpio:
-	gpio_free(gpio);
-}
-
-#define REQUEST_AND_SET_GPIO(N)	request_and_set_gpio(N, #N, 1);
-#define REQUEST_AND_CLR_GPIO(N)	request_and_set_gpio(N, #N, 0);
 /*
  * Basic board specific setup.  Pinmux has been handled already.
  */
@@ -105,13 +80,7 @@ int board_init(void)
 #if defined(CONFIG_STATUS_LED) && defined(STATUS_LED_BOOT)
 	status_led_set(STATUS_LED_BOOT, STATUS_LED_OFF);
 #endif
-    gpio_request(GPIO_PHY_RESET, "PHY_RESET");
-    gpio_direction_output(GPIO_PHY_RESET, 0);
-/* reset PHYs */
-    gpio_set_value(GPIO_PHY_RESET, 0);
-    mdelay(20);	/* PHY datasheet states 1uS min. */
-    gpio_set_value(GPIO_PHY_RESET, 1);		
-    return 0;
+	return 0;
 }
 
 #if defined (CONFIG_DRIVER_TI_CPSW) && !defined(CONFIG_SPL_BUILD)
@@ -121,11 +90,22 @@ static void cpsw_control(int enabled)
 	return;
 }
 
-static struct cpsw_slave_data cpsw_slave = {
-	.slave_reg_ofs	= 0x208,
-	.sliver_reg_ofs	= 0xd80,
-	.phy_addr	= 4,
-	.phy_if		= PHY_INTERFACE_MODE_RGMII,
+static struct cpsw_slave_data cpsw_slaves[] = {
+	{
+		.slave_reg_ofs	= 0x208,
+		.sliver_reg_ofs	= 0xd80,
+		.phy_addr	= 0,
+	},
+//	{
+//		.slave_reg_ofs	= 0x208,
+//		.sliver_reg_ofs	= 0xd80,
+//		.phy_addr	= 1,
+//	},
+	{
+		.slave_reg_ofs	= 0x208,
+		.sliver_reg_ofs	= 0xd80,
+		.phy_addr	= 4,
+	},
 };
 
 static struct cpsw_platform_data cpsw_data = {
@@ -134,8 +114,8 @@ static struct cpsw_platform_data cpsw_data = {
 	.mdio_div		= 0xff,
 	.channels		= 8,
 	.cpdma_reg_ofs		= 0x800,
-	.slaves			= 1,
-	.slave_data		= &cpsw_slave,
+	.slaves			= 2,
+	.slave_data		= cpsw_slaves,
 	.ale_reg_ofs		= 0xd00,
 	.ale_entries		= 1024,
 	.host_port_reg_ofs	= 0x108,
@@ -223,6 +203,23 @@ static int handle_mac1_address(void)
 #define AR8051_DEBUG_RGMII_CLK_DLY_REG	0x5
 #define AR8051_RGMII_TX_CLK_DLY		0x100
 
+static void board_phy_init(void)
+{
+	if(GPIO_PHY_RST>0){
+		gpio_request(GPIO_PHY_RST, "phy_rst");
+		gpio_direction_output(GPIO_PHY_RST, 0);
+		mdelay(20);
+		gpio_set_value(GPIO_PHY_RST, 1);
+	}
+	if(GPIO_PHY_RST2>0){
+		gpio_request(GPIO_PHY_RST2, "phy_rst2");
+		gpio_direction_output(GPIO_PHY_RST2, 0);
+		mdelay(20);
+		gpio_set_value(GPIO_PHY_RST2, 1);
+	}
+	mdelay(10);
+}
+
 int board_eth_init(bd_t *bis)
 {
 	int rv, n = 0;
@@ -238,6 +235,9 @@ int board_eth_init(bd_t *bis)
 		printf("No MAC address for mac1 found!\n");
 
 	writel(RGMII_MODE_ENABLE | RGMII_INT_DELAY, &cdev->miisel);
+
+	board_phy_init();
+
 	rv = cpsw_register(&cpsw_data);
 	if (rv < 0)
 		printf("Error %d registering CPSW switch\n", rv);

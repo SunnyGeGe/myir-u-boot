@@ -77,8 +77,13 @@ static struct module_pin_mux rgmii1_pin_mux[] = {
 	{OFFSET(mii1_rxd2), MODE(2) | RXACTIVE},	/* RGMII1_RD2 */
 	{OFFSET(mii1_rxd1), MODE(2) | RXACTIVE},	/* RGMII1_RD1 */
 	{OFFSET(mii1_rxd0), MODE(2) | RXACTIVE},	/* RGMII1_RD0 */
+#ifdef CONFIG_GPIO_MDIO
+	{OFFSET(mdio_data), MODE(7) | RXACTIVE | SLEWCTRL | PULLUP_EN},/* MDIO_DATA */
+	{OFFSET(mdio_clk), MODE(7) | PULLUP_EN},	/* MDIO_CLK */
+#else
 	{OFFSET(mdio_data), MODE(0) | RXACTIVE | PULLUP_EN},/* MDIO_DATA */
 	{OFFSET(mdio_clk), MODE(0) | PULLUP_EN},	/* MDIO_CLK */
+#endif
 	{-1},
 };
 static struct module_pin_mux rmii1_pin_mux[] = {
@@ -130,7 +135,7 @@ static struct module_pin_mux nand_pin_mux[] = {
 	{-1},
 };
 #endif
-
+#if !defined(CONFIG_NAND)
 static struct module_pin_mux emmc_pin_mux[] = {
 	{OFFSET(gpmc_csn1), (MODE(2) | PULLUDDIS | RXACTIVE)}, /* EMMC_CLK */
 	{OFFSET(gpmc_csn2), (MODE(2) | PULLUP_EN | RXACTIVE)}, /* EMMC_CMD */
@@ -145,7 +150,7 @@ static struct module_pin_mux emmc_pin_mux[] = {
     {OFFSET(gpmc_csn0), (MODE(1) | PULLUP_EN | RXACTIVE)}, /* EMMC_RST */    
 	{-1},
 };
-
+#endif
 
 
 static struct module_pin_mux status_led_pin_mux[] = {
@@ -154,6 +159,8 @@ static struct module_pin_mux status_led_pin_mux[] = {
 };
 
 static struct module_pin_mux myd_wdt_pin_mux[] = {
+//	{OFFSET(xdma_event_intr0), (MODE(7) | PULLUP_EN)},      /* PHY_RST:GPIO0_19 */
+	{OFFSET(emu0), (MODE(7) | PULLUP_EN)},                  /* EEPROM_WP:GPIO3_7 */
 	{OFFSET(emu1), (MODE(7) | PULLUDDIS | RXACTIVE)},	/* GPIO3_8 */
 	{-1},
 };

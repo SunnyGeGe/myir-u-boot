@@ -44,10 +44,10 @@ DECLARE_GLOBAL_DATA_PTR;
 #define GPIO_PR1_MII_CTRL	GPIO_TO_PIN(3, 4)
 #define GPIO_MUX_MII_CTRL	GPIO_TO_PIN(3, 10)
 #define GPIO_FET_SWITCH_CTRL	GPIO_TO_PIN(0, 7)
-#define GPIO_PHY_RESET		GPIO_TO_PIN(2, 5)
+#define GPIO_PHY_RST		-1
+#define GPIO_PHY_RST2		GPIO_PIN(3, 8)
 #define GPIO_ETH0_MODE		GPIO_TO_PIN(0, 11)
 #define GPIO_ETH1_MODE		GPIO_TO_PIN(1, 26)
-
 //static struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
 
 #define GPIO0_RISINGDETECT	(AM33XX_GPIO0_BASE + OMAP_GPIO_RISINGDETECT)
@@ -202,22 +202,20 @@ static int handle_mac1_address(void)
 #define AR8051_DEBUG_RGMII_CLK_DLY_REG	0x5
 #define AR8051_RGMII_TX_CLK_DLY		0x100
 
-
-/* PHY reset GPIO */
-/* GPIO pin + bank to pin ID mapping */
-#define GPIO_PIN(_bank, _pin)		((_bank << 5) + _pin)
-#define GPIO_PHY_RST		GPIO_PIN(0, 19)
-#define GPIO_PHY_RST2		GPIO_PIN(3, 8)
-
 static void board_phy_init(void)
 {
-	gpio_request(GPIO_PHY_RST, "phy_rst");
-	gpio_request(GPIO_PHY_RST2, "phy_rst2");
-	gpio_direction_output(GPIO_PHY_RST, 0);
-	gpio_direction_output(GPIO_PHY_RST2, 0);
-	mdelay(10);
-	gpio_set_value(GPIO_PHY_RST, 1);
-	gpio_set_value(GPIO_PHY_RST2, 1);
+	if(GPIO_PHY_RST>0){
+		gpio_request(GPIO_PHY_RST, "phy_rst");
+		gpio_direction_output(GPIO_PHY_RST, 0);
+		mdelay(20);
+		gpio_set_value(GPIO_PHY_RST, 1);
+	}
+	if(GPIO_PHY_RST2>0){
+		gpio_request(GPIO_PHY_RST2, "phy_rst2");
+		gpio_direction_output(GPIO_PHY_RST2, 0);
+		mdelay(20);
+		gpio_set_value(GPIO_PHY_RST2, 1);
+	}
 	mdelay(10);
 }
 
