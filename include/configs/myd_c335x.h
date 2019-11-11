@@ -182,7 +182,7 @@
 	"nand write ${loadaddr} NAND.recovery ${filesize};" \
 	"fi; \0"
 #else
-#define UPDATERECOVERY "updaterecovery=echo 'no uboot backup partitions.'; \0"
+#define UPDATERECOVERY "updaterecovery=echo 'no recovery partitions.'; \0"
 #endif
 
 #ifdef CONFIG_MYIR_UBOOT_BACKUP			
