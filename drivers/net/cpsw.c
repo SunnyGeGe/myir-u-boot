@@ -1378,7 +1378,7 @@ int _cpsw_register(struct cpsw_priv *priv)
 			phy_connected += 1;
 		}
 	}
-
+#if 0
 	if(phy_connected == 0){ 	
 			printf("======\r\n");
 #ifdef CONFIG_TARGET_MYD_C335X
@@ -1394,7 +1394,7 @@ int _cpsw_register(struct cpsw_priv *priv)
 			printf("------\r\n");
 			reset_cpu(0);   // no one phy connected
 	}
-
+#endif
 	return 0;
 }
 
