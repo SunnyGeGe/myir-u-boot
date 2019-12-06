@@ -57,6 +57,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define CPSW_SLIVER1_OFFSET	0xdc0
 #define CPSW_BD_OFFSET		0x2000
 #define CPSW_MDIO_DIV		0xff
+#define CPSW_MDIO_MAX_RETRY 10
 
 #define AM335X_GMII_SEL_OFFSET	0x630
 
@@ -87,6 +88,24 @@ DECLARE_GLOBAL_DATA_PTR;
  */
 #define MDIO_TIMEOUT            100 /* msecs */
 #define CPDMA_TIMEOUT		100 /* msecs */
+
+static int mdio_phy_reset(struct mii_dev *bus)
+{
+	if(GPIO_PHY_RST>0){
+		gpio_request(GPIO_PHY_RST, "phy_rst");
+		gpio_direction_output(GPIO_PHY_RST, 0);
+		mdelay(20);
+		gpio_set_value(GPIO_PHY_RST, 1);
+	}
+	if(GPIO_PHY_RST2>0){
+		gpio_request(GPIO_PHY_RST2, "phy_rst2");
+		gpio_direction_output(GPIO_PHY_RST2, 0);
+		mdelay(20);
+		gpio_set_value(GPIO_PHY_RST2, 1);
+	}
+	mdelay(10);
+	return 0;
+}
 
 #ifdef CONFIG_GPIO_MDIO
 
@@ -887,6 +906,7 @@ static void cpsw_mdio_init(const char *name, u32 mdio_base, u32 div)
 		goto out_free_bus;
 	memset(bitbang,0,sizeof(struct mdio_gpio_info));
 	bitbang->ctrl.ops = &mdio_gpio_ops;
+	bitbang->ctrl.reset= mdio_phy_reset;
 	bitbang->mdc = GPIO_MDC;
 	bitbang->mdc_active_low = 0;
 	bitbang->mdio = GPIO_MDIO;
@@ -932,6 +952,7 @@ out_free_bus:
 
 	bus->read = cpsw_mdio_read;
 	bus->write = cpsw_mdio_write;
+	bus->reset = mdio_phy_reset;
 	strcpy(bus->name, name);
 
 	mdio_register(bus);
@@ -1319,14 +1340,19 @@ static int cpsw_phy_init(struct cpsw_priv *priv, struct cpsw_slave *slave)
 {
 	struct phy_device *phydev;
 	u32 supported = PHY_GBIT_FEATURES;
+	u32 retry = 0;
 
-	phydev = phy_connect(priv->bus,
-			slave->data->phy_addr,
-			priv->dev,
-			slave->data->phy_if);
-
+	for(retry=0; retry<CPSW_MDIO_MAX_RETRY;retry++){
+		phydev = phy_connect(priv->bus,
+				slave->data->phy_addr,
+				priv->dev,
+				slave->data->phy_if);
+		if((phydev)/*||(slave->data->phy_addr==0)*/){
+			break;
+		}
+	}
+	
 	if (!phydev){
-
 		return -1;
 	}
 
