@@ -1407,6 +1407,7 @@ int _cpsw_register(struct cpsw_priv *priv)
 
 	if(phy_connected == 0){ 	
 			printf("======\r\n");
+#if 0
 #ifdef CONFIG_TARGET_MYD_C335X
 			int wdi = 32*3+19;
 #else
@@ -1419,6 +1420,7 @@ int _cpsw_register(struct cpsw_priv *priv)
 			
 			printf("------\r\n");
 			reset_cpu(0);   // no one phy connected
+#endif
 	}
 
 	return 0;
