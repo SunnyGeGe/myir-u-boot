@@ -159,9 +159,10 @@ static struct module_pin_mux status_led_pin_mux[] = {
 };
 
 static struct module_pin_mux myd_wdt_pin_mux[] = {
-//	{OFFSET(xdma_event_intr0), (MODE(7) | PULLUP_EN)},      /* PHY_RST:GPIO0_19 */
+	{OFFSET(xdma_event_intr0), (MODE(7) | PULLUP_EN)},      /* GPIO0_19 */
 	{OFFSET(emu0), (MODE(7) | PULLUP_EN)},                  /* EEPROM_WP:GPIO3_7 */
 	{OFFSET(emu1), (MODE(7) | PULLUDDIS | RXACTIVE)},	/* GPIO3_8 */
+	{OFFSET(gpmc_a2), (MODE(7) | PULLUP_EN)},	/* GPIO1_18 */
 	{-1},
 };
 void set_uart_mux_conf(void)

@@ -60,6 +60,15 @@ int board_init(void)
 #if defined(CONFIG_STATUS_LED) && defined(STATUS_LED_BOOT)
 	status_led_set(STATUS_LED_BOOT, STATUS_LED_OFF);
 #endif
+	gpio_request(GPIO_TO_PIN(1,18), "lcd_rst");
+	gpio_request(GPIO_TO_PIN(0,19), "lcd_disp");
+	gpio_direction_output(GPIO_TO_PIN(1,18), 0);
+	gpio_direction_output(GPIO_TO_PIN(0,19), 1);
+	mdelay(500);
+	gpio_set_value(GPIO_TO_PIN(1,18), 1);
+	gpio_set_value(GPIO_TO_PIN(0,19), 1);
+	gpio_direction_input(GPIO_TO_PIN(1,18));
+	gpio_direction_input(GPIO_TO_PIN(0,19));
 	return 0;
 }
 
