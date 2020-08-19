@@ -159,12 +159,40 @@ static struct module_pin_mux status_led_pin_mux[] = {
 };
 
 static struct module_pin_mux myd_wdt_pin_mux[] = {
-	{OFFSET(xdma_event_intr0), (MODE(7) | PULLUP_EN)},      /* GPIO0_19 */
+//	{OFFSET(xdma_event_intr0), (MODE(7) | PULLUP_EN)},      /* GPIO0_19 */
 	{OFFSET(emu0), (MODE(7) | PULLUP_EN)},                  /* EEPROM_WP:GPIO3_7 */
 	{OFFSET(emu1), (MODE(7) | PULLUDDIS | RXACTIVE)},	/* GPIO3_8 */
-	{OFFSET(gpmc_a2), (MODE(7) | PULLUP_EN)},	/* GPIO1_18 */
+	{OFFSET(gpmc_a2), (MODE(7) | PULLUDEN)},	/* GPIO1_18 */
+	{OFFSET(mcasp0_axr1), (MODE(7) | PULLUP_EN)},	/* GPIO3_20 */
 	{-1},
 };
+static struct module_pin_mux lcd_pin_mux[] = {
+	{OFFSET(lcd_data0), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data1), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data2), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data3), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data4), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data5), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data6), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data7), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data8), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data9), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data10), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data11), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data12), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data13), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data14), MODE(0) | PULLUDEN | RXACTIVE},	
+	{OFFSET(lcd_data15), MODE(0) | PULLUDEN | RXACTIVE},	
+    {OFFSET(lcd_vsync), MODE(0) | PULLUDEN | RXACTIVE}, 
+    {OFFSET(lcd_hsync), MODE(0) | PULLUDEN | RXACTIVE}, 
+    {OFFSET(lcd_pclk), MODE(0)| PULLUDEN | RXACTIVE},   
+    {OFFSET(lcd_ac_bias_en), MODE(0)| PULLUDEN | RXACTIVE}, 
+
+    {OFFSET(spi0_sclk), MODE(7)| PULLUDEN}, 
+
+    {-1},
+};
+
 void set_uart_mux_conf(void)
 {
 	configure_module_pin_mux(uart0_pin_mux);
@@ -183,6 +211,7 @@ void set_mux_conf_regs(void)
 #else
 	configure_module_pin_mux(emmc_pin_mux);
 #endif
+    configure_module_pin_mux(lcd_pin_mux);
 	configure_module_pin_mux(status_led_pin_mux);
 	configure_module_pin_mux(myd_wdt_pin_mux);
 }

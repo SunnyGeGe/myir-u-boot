@@ -708,10 +708,12 @@ int lcd_display_bitmap(ulong bmp_image, int x, int y)
 	case 24:
 		for (i = 0; i < height; ++i) {
 			for (j = 0; j < width; j++) {
-				*(fb++) = *(bmap++);
-				*(fb++) = *(bmap++);
-				*(fb++) = *(bmap++);
+				*(fb++) = *(bmap+2);
+				*(fb++) = *(bmap+1);
+				*(fb++) = *(bmap);
 				*(fb++) = 0;
+
+				bmap = bmap+3;
 			}
 			fb -= lcd_line_length + width * (bpix / 8);
 		}

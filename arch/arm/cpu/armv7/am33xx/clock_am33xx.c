@@ -51,6 +51,13 @@ const struct dpll_regs dpll_ddr_regs = {
 	.cm_div_m2_dpll		= CM_WKUP + 0xA0,
 };
 
+const struct dpll_regs dpll_disp_regs = {
+	.cm_clkmode_dpll	= CM_WKUP + 0x98,
+	.cm_idlest_dpll		= CM_WKUP + 0x48,
+	.cm_clksel_dpll		= CM_WKUP + 0x54,
+	.cm_div_m2_dpll		= CM_WKUP + 0xA4,
+};
+
 struct dpll_params dpll_mpu_opp100 = {
 		CONFIG_SYS_MPUCLK, OSC-1, 1, -1, -1, -1, -1};
 const struct dpll_params dpll_core_opp100 = {
@@ -61,6 +68,8 @@ const struct dpll_params dpll_core = {
 		50, OSC-1, -1, -1, 1, 1, 1};
 const struct dpll_params dpll_per = {
 		960, OSC-1, 5, -1, -1, -1, -1};
+const struct dpll_params dpll_disp = {
+		102, OSC-1, -1, -1, -1, -1, -1};
 
 const struct dpll_params *get_dpll_mpu_params(void)
 {
@@ -75,6 +84,11 @@ const struct dpll_params *get_dpll_core_params(void)
 const struct dpll_params *get_dpll_per_params(void)
 {
 	return &dpll_per;
+}
+
+const struct dpll_params *get_dpll_disp_params(void)
+{
+	return &dpll_disp;
 }
 
 void setup_clocks_for_console(void)
@@ -151,6 +165,8 @@ void enable_basic_clocks(void)
 		&cmper->usb0clkctrl,
 		&cmper->emiffwclkctrl,
 		&cmper->emifclkctrl,
+		&cmper->lcdclkctrl,
+		&cmper->lcdcclkstctrl,
 		0
 	};
 

@@ -4,3 +4,4 @@
 #
 
 obj-${CONFIG_MYIR_I2C_BOARD_DETECT} += board_detect.o
+obj-${CONFIG_LCD} += display.o
